@@ -73,6 +73,9 @@ tr.tot td{font-weight:bold;background:var(--b2)}
 .flagged{border:2px solid var(--r)}
 .toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#1F2933;color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;z-index:30;opacity:.92}
 @media print{.top,.tabs,.btn,.chips,#nr,#nl{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
+#prt{display:none}
+@media print{@page{size:A4;margin:12mm}body.pdoc>*:not(#prt){display:none!important}body.pdoc #prt{display:block}}
+.dc{color:#111;font-size:12.5px;line-height:1.55}.dc .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1F4E78;padding-bottom:8px;margin-bottom:10px}.dc .hd img{width:58px;height:58px;object-fit:contain}.dc .org{font-size:16px;font-weight:bold;color:#1F4E78}.dc .ttl{font-size:15px;font-weight:bold;margin-top:2px}.dc .nb{border:1.5px solid #1F4E78;padding:4px 12px;font-size:15px;font-weight:bold;text-align:center}.dc .sm{font-size:11px;color:#444;text-align:center;margin-top:3px}.dc .sec{background:#DDEBF7;font-weight:bold;padding:4px 8px;margin:12px 0 0;border:1px solid #9DB4CC;border-bottom:0}.dc table{width:100%;border-collapse:collapse}.dc td{border:1px solid #9DB4CC;padding:6px 8px;vertical-align:top}.dc td.l{background:#F4F7FA;width:19%;color:#333}.dc td.v{width:31%;font-weight:bold}.dc .ln{display:inline-block;min-width:120px;border-bottom:1px dotted #777;height:1em}.dc .ack{border:1px solid #9DB4CC;padding:9px 10px;margin-top:12px;text-align:justify}.dc .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}.dc .sg div{border:1px solid #9DB4CC;height:78px;padding:5px;font-size:11.5px;color:#333;text-align:center}.dc .ft{margin-top:14px;font-size:10.5px;color:#666;display:flex;justify-content:space-between;border-top:1px solid #ccc;padding-top:5px}
 </style>
 </head>
 <body>
@@ -120,6 +123,46 @@ function msg(id, text, ok) { var m = $(id); if (!m) return; m.className = 'msg '
 function busy(btn, on) { if (btn) { btn.disabled = on; if (on) { btn.dataset.t = btn.textContent; btn.textContent = 'لحظة…'; } else if (btn.dataset.t) btn.textContent = btn.dataset.t; } }
 function stCls(s) { return s === 'على رأس العمل' || s === 'معتمد' || s === 'معتمدة' ? 's1' : (s === 'إجازة' || s === 'بانتظار الاعتماد' || s === 'مرفوع' ? 's2' : (s === 'مرفوض' || s === 'مرفوضة' ? 's4' : (s === 'مسودة' ? 's5' : 's3'))); }
 function modal(html, sticky) { var d = document.createElement('div'); d.className = 'modal'; d.innerHTML = '<div class="card">' + html + '</div>'; document.body.appendChild(d); if (!sticky) d.addEventListener('click', function (e) { if (e.target === d) d.remove(); }); return d; }
+
+// ===== النماذج المطبوعة =====
+function dv(x) { return x === '' || x === null || x === undefined ? '<span class="ln"></span>' : esc(String(x)); }
+function dRow(a, b, c, d2) { return '<tr><td class="l">' + a + '</td><td class="v">' + dv(b) + '</td>' + (c ? '<td class="l">' + c + '</td><td class="v">' + dv(d2) + '</td>' : '<td class="l"></td><td class="v"></td>') + '</tr>'; }
+function dEmp(e) { return '<div class="sec">بيانات العامل</div><table>' + dRow('رقم الموظف', e.id, 'الاسم', e.name) + dRow('الجنسية', e.nat, 'رقم الإقامة أو الهوية', e.iqama) + dRow('الوظيفة', e.job, 'تاريخ بداية العمل', e.start) + '</table>'; }
+function dHead(d, title, no, sub) { return '<div class="hd"><img src="icon.png" alt=""><div style="flex:1;padding:0 12px"><div class="org">' + esc(d.org) + '</div><div class="ttl">' + title + '</div></div><div><div class="nb">' + esc(no) + '</div><div class="sm">' + sub + '</div></div></div>'; }
+function dSign(a) { return '<div class="sg">' + a.map(function (x) { return '<div>' + x + '</div>'; }).join('') + '</div>'; }
+function docHtml(d) {
+  var foot = '<div class="ft"><span>صدر من نظام رواتب شواطئ النخيل</span><span>طُبع ' + esc(S.me.today) + '</span></div>';
+  if (d.kind === 'ret') {
+    return '<div class="dc">' + dHead(d, 'نموذج مباشرة عمل', d.retNo, 'مرتبط بنموذج الإجازة ' + esc(d.no)) + dEmp(d.e) +
+      '<div class="sec">بيانات المباشرة</div><table>' + dRow('آخر يوم عمل قبل الإجازة', d.lastWork, 'تاريخ العودة المحدد', d.expReturn || 'مفتوحة') +
+      dRow('تاريخ المباشرة الفعلي', d.ret, 'مدة الإجازة الفعلية', d.actual + ' يوم') +
+      dRow('التأخير عن الموعد', d.late ? d.late + ' يوم' : 'بدون تأخير', 'سجّل المباشرة', d.retBy ? d.retBy + (d.retAt ? ' — ' + d.retAt : '') : '') +
+      (d.late ? dRow('سبب التأخير', d.lateNote, 'تقييم العذر', d.lateOk) : '') + '</table>' +
+      '<div class="ack"><b>إقرار العامل:</b> أقر أنا الموقع أدناه بأنني باشرت عملي لدى المؤسسة اعتباراً من تاريخ المباشرة الفعلي المبين أعلاه، وأن البيانات الواردة في هذا النموذج صحيحة.</div>' +
+      dSign(['توقيع العامل', 'المسؤول المباشر', 'اعتماد صاحب العمل', 'ختم المؤسسة']) + foot + '</div>';
+  }
+  var open = !d.expReturn;
+  return '<div class="dc">' + dHead(d, 'نموذج إجازة', d.no, 'تاريخ الإصدار ' + esc(d.issued)) + dEmp(d.e) +
+    '<div class="sec">بيانات الإجازة</div><table>' + dRow('آخر يوم عمل', d.lastWork, 'أول يوم إجازة', d.start) +
+    (open ? dRow('تاريخ العودة', 'مفتوحة', 'تاريخ المراجعة', d.review) : dRow('تاريخ العودة للعمل', d.expReturn, 'مدة الإجازة', d.days + ' يوم')) +
+    dRow('سبب الإجازة', d.reason, 'رقم التواصل أثناء الإجازة', d.phone) +
+    dRow('أدخل النموذج', d.by, 'تاريخ الاعتماد', d.decAt) + '</table>' +
+    '<div class="ack"><b>إقرار العامل:</b> أقر أنا الموقع أدناه بصحة البيانات الواردة في هذا النموذج، ' +
+    (open ? 'وألتزم بالتواصل مع المؤسسة قبل تاريخ المراجعة المحدد لتحديد موعد عودتي، ' : 'وألتزم بمباشرة عملي في تاريخ العودة المحدد، ') +
+    'وبإبلاغ المؤسسة مسبقاً بأي ظرف يمنعني من ذلك، وأعلم أن التأخر عن موعد العودة دون عذر مقبول يُعامل وفق أحكام نظام العمل.</div>' +
+    '<div class="ack"><b>موافقة المؤسسة:</b> توافق المؤسسة على الإجازة الموضحة أعلاه.</div>' +
+    dSign(['توقيع العامل', 'المحاسب', 'اعتماد صاحب العمل', 'ختم المؤسسة']) + foot + '</div>';
+}
+function printDoc(btn, no, kind) {
+  busy(btn, true);
+  if (kind === 'ret') delete C.leave;
+  call('leaveDoc', S.t, Number(no), kind).then(function (d) {
+    busy(btn, false); $('prt').innerHTML = docHtml(d); document.body.classList.add('pdoc');
+    var img = $('prt').querySelector('img'), go2 = function () { window.print(); };
+    if (img && !img.complete) { img.onload = go2; img.onerror = go2; } else go2();
+  }).catch(function (e) { busy(btn, false); alert(e.message); });
+}
+window.addEventListener('afterprint', function () { document.body.classList.remove('pdoc'); });
 
 // ===== الدخول =====
 function showLogin(err) {
@@ -207,7 +250,7 @@ function vEmp(id) {
     $('view').innerHTML = '<button class="btn l sm" onclick="go(\'emps\')">← رجوع</button>' +
       '<div class="card"><h2>' + esc(e.name) + ' <span class="muted">' + e.id + '</span></h2>' +
       '<div class="kv"><span>الحالة</span><b><span class="st ' + stCls(d.status) + '">' + d.status + '</span></b></div>' +
-      '<div class="kv"><span>الوظيفة</span><b>' + esc(e.job) + '</b></div><div class="kv"><span>الراتب</span><b>' + n2(e.salary) + '</b></div>' +
+      '<div class="kv"><span>الوظيفة</span><b>' + esc(e.job) + '</b></div>' + (e.nat ? '<div class="kv"><span>الجنسية</span><b>' + esc(e.nat) + '</b></div>' : '') + (e.iqama ? '<div class="kv"><span>رقم الإقامة أو الهوية</span><b>' + esc(e.iqama) + '</b></div>' : '') + '<div class="kv"><span>الراتب</span><b>' + n2(e.salary) + '</b></div>' +
       '<div class="kv"><span>المتأخرات المعتمدة لين 31/10</span><b>' + (d.arrearsState === 'معلّق' ? 'معلّقة' : n2(d.arrears)) + '</b></div>' +
       '<div class="kv"><span>الباقي له بعد آخر مسير معتمد</span><b style="color:var(--r)">' + n2(d.bal) + '</b></div>' +
       (d.comm ? '<div class="kv"><span>العمولات الباقية</span><b>' + n2(d.comm) + '</b></div>' : '') +
@@ -230,12 +273,13 @@ function empForm(e) {
     '<label class="req">الوظيفة</label><select id="fj"><option' + (e.job === 'مندوب' ? '' : ' selected') + '>موظف</option><option' + (e.job === 'مندوب' ? ' selected' : '') + '>مندوب</option></select>' +
     '<label class="req">الراتب</label><input id="fsal" inputmode="decimal" value="' + esc(e.salary || '') + '">' +
     '<label>تاريخ بداية العمل</label><input id="fst" type="date" value="' + esc(e.start || '') + '">' +
+    '<label>الجنسية</label><input id="fna" value="' + esc(e.nat || '') + '"><label>رقم الإقامة أو الهوية</label><input id="fiq" inputmode="numeric" value="' + esc(e.iqama || '') + '">' +
     '<label><input type="checkbox" id="fstop" style="width:auto"' + (e.stopped === 'نعم' ? ' checked' : '') + '> موظف متوقف (ترك العمل)</label><input id="fld" type="date" value="' + esc(e.lastDay || '') + '" placeholder="آخر يوم عمل">' +
     '<label>ملاحظات</label><textarea id="fno">' + esc(e.notes || '') + '</textarea>' +
     (e.id ? '<div class="hint a">أي تغيير ينسجّل في السجل باسمك.</div>' : '') + '<button class="btn" id="fb">حفظ</button><div id="fm" class="msg"></div>');
   $('fb').onclick = function () {
     var b = this; busy(b, true);
-    call('saveEmployee', S.t, {id: e.id || '', name: $('fn').value, short: $('fs').value, job: $('fj').value, salary: $('fsal').value, start: $('fst').value, stopped: $('fstop').checked, lastDay: $('fld').value, notes: $('fno').value})
+    call('saveEmployee', S.t, {id: e.id || '', name: $('fn').value, short: $('fs').value, job: $('fj').value, salary: $('fsal').value, start: $('fst').value, stopped: $('fstop').checked, lastDay: $('fld').value, notes: $('fno').value, nat: $('fna').value, iqama: $('fiq').value})
       .then(function (r) { d.remove(); return call('boot', S.t).then(function (bb) { S.emps = bb.emps; vEmp(r.id); }); }).catch(function (er) { busy(b, false); msg('fm', er.message); });
   };
 }
@@ -361,25 +405,33 @@ function vLeave() {
         '<div class="kv"><span>آخر يوم عمل</span><b>' + esc(l.lastWork) + '</b></div>' +
         (l.expReturn ? '<div class="kv"><span>الرجوع المتوقع</span><b>' + esc(l.expReturn) + '</b></div>' : '') + (l.review ? '<div class="kv"><span>تاريخ المراجعة</span><b>' + esc(l.review) + '</b></div>' : '') +
         (l.ret ? '<div class="kv"><span>باشر</span><b>' + esc(l.ret) + '</b></div>' : '') + (l.settle ? '<div class="kv"><span>تسوية الحقوق</span><b>' + n2(l.settle) + '</b></div>' : '') +
-        (l.note ? '<p class="muted">' + esc(l.note) + '</p>' : '') + (l.late ? '<div class="hint r">تأخر عن موعد الرجوع</div>' : '') + act + '</div>';
+        (l.reason ? '<div class="kv"><span>السبب</span><b>' + esc(l.reason) + '</b></div>' : '') + (l.lateNote ? '<div class="kv"><span>سبب التأخير</span><b>' + esc(l.lateNote) + ' (' + esc(l.lateOk) + ')</b></div>' : '') +
+        (l.note ? '<p class="muted">' + esc(l.note) + '</p>' : '') + (l.late ? '<div class="hint r">تأخر عن موعد الرجوع</div>' : '') + act +
+        (l.state === 'معتمدة' || l.state === 'انتهت بالمباشرة' ? '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn l sm" data-pl="' + l.no + '">طباعة نموذج الإجازة إج-' + ('000' + l.no).slice(-4) + '</button>' + (l.ret ? '<button class="btn l sm" data-pr="' + l.no + '">طباعة نموذج المباشرة' + (l.retNo ? ' مب-' + ('000' + l.retNo).slice(-4) : '') + '</button>' : '') + '</div>' : '') + '</div>';
     }
     $('view').innerHTML = '<button class="btn" id="nl">+ نموذج إجازة</button>' +
       (pend.length ? '<h3>بانتظار الاعتماد</h3>' + pend.map(function (l) { return card(l, own ? '<div style="display:flex;gap:8px"><button class="btn g" data-lok="' + l.no + '">اعتماد</button><button class="btn r" data-lno="' + l.no + '">رفض</button></div>' : ''); }).join('') : '') +
       '<h3>في إجازة الحين</h3>' + (open.length ? open.map(function (l) { return card(l, '<button class="btn g" data-ret="' + l.no + '" data-nm="' + esc(l.name) + '" data-exp="' + esc(l.expReturn) + '">نموذج مباشرة</button>'); }).join('') : '<div class="card"><p class="muted">ما أحد في إجازة</p></div>') +
       (rest.length ? '<h3>السابقة</h3>' + rest.map(function (l) { return card(l, ''); }).join('') : '');
     $('nl').onclick = leaveForm;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pl]'), function (b) { b.onclick = function () { printDoc(b, b.dataset.pl, 'leave'); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pr]'), function (b) { b.onclick = function () { printDoc(b, b.dataset.pr, 'ret'); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-lok]'), function (b) { b.onclick = function () { busy(b, true); call('decideLeave', S.t, Number(b.dataset.lok), true).then(vLeave).catch(function (e) { busy(b, false); alert(e.message); }); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-lno]'), function (b) { b.onclick = function () { busy(b, true); call('decideLeave', S.t, Number(b.dataset.lno), false).then(vLeave).catch(function (e) { busy(b, false); alert(e.message); }); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-ret]'), function (b) { b.onclick = function () {
-      var d = modal('<h2>نموذج مباشرة — ' + esc(b.dataset.nm) + '</h2>' + (b.dataset.exp ? '<div class="hint a">الرجوع المتوقع ' + esc(b.dataset.exp) + '</div>' : '') + '<label class="req">تاريخ المباشرة الفعلي</label><input id="rtd" type="date" value="' + S.me.today + '"><div class="hint g">الراتب يرجع ينحسب من هذا اليوم.</div><button class="btn g" id="rty">تسجيل المباشرة</button><div id="rtm" class="msg"></div>');
-      $('rty').onclick = function () { var x = this; busy(x, true); call('returnToWork', S.t, Number(b.dataset.ret), $('rtd').value).then(function () { d.remove(); vLeave(); }).catch(function (e) { busy(x, false); msg('rtm', e.message); }); };
+      var exp = b.dataset.exp, d = modal('<h2>نموذج مباشرة — ' + esc(b.dataset.nm) + '</h2>' + (exp ? '<div class="hint a">الرجوع المتوقع ' + esc(exp) + '</div>' : '') + '<label class="req">تاريخ المباشرة الفعلي</label><input id="rtd" type="date" max="' + S.me.today + '" value="' + S.me.today + '">' +
+        '<div id="rtl" style="display:none"><div class="hint r" id="rtx"></div><label class="req">سبب التأخير</label><input id="rtn"><label class="req">تقييم العذر</label><select id="rto"><option value="">اختر</option><option>مقبول</option><option>غير مقبول</option></select></div>' +
+        '<div class="hint g">الراتب يرجع ينحسب من هذا اليوم.</div><button class="btn g" id="rty">تسجيل المباشرة</button><div id="rtm" class="msg"></div>');
+      function lt() { var v = $('rtd').value, n = exp && v > exp ? Math.round((new Date(v) - new Date(exp)) / 86400000) : 0; $('rtl').style.display = n ? '' : 'none'; $('rtx').textContent = 'متأخر ' + n + ' يوم عن الموعد'; }
+      $('rtd').onchange = lt; lt();
+      $('rty').onclick = function () { var x = this; busy(x, true); call('returnToWork', S.t, Number(b.dataset.ret), $('rtd').value, $('rtn').value, $('rto').value).then(function (r) { d.remove(); vLeave(); var m = modal('<h2 style="color:var(--g)">✔ انسجلت المباشرة</h2><p>رقم النموذج مب-' + ('000' + r.retNo).slice(-4) + '</p><button class="btn" id="rp">طباعة نموذج المباشرة</button><button class="btn l" id="rc">لاحقاً</button>'); $('rc').onclick = function () { m.remove(); }; $('rp').onclick = function () { m.remove(); printDoc(null, b.dataset.ret, 'ret'); }; }).catch(function (e) { busy(x, false); msg('rtm', e.message); }); };
     }; });
   }).catch(fail);
 }
 function leaveForm() {
   var d = modal('<h2>نموذج إجازة</h2><p class="muted" style="margin-top:0">كل الإجازات بدون راتب.</p><label class="req">الموظف</label><select id="le">' + empOptions(false) + '</select>' +
     '<label class="req">آخر يوم عمل</label><input id="llw" type="date"><label>الرجوع المتوقع</label><input id="ler" type="date"><p class="muted">لو الإجازة مفتوحة اتركه فاضي، والنظام يحط موعد مراجعة بعد 3 شهور.</p>' +
-    '<label>ملاحظة</label><input id="lnt"><div id="lpv"></div><button class="btn" id="lb">' + (S.me.role === 'owner' ? 'حفظ واعتماد' : 'حفظ وإرسال للاعتماد') + '</button><div id="lm" class="msg"></div>');
+    '<label>سبب الإجازة</label><input id="lrs"><label>رقم التواصل أثناء الإجازة</label><input id="lph" inputmode="tel"><label>ملاحظة داخلية (ما تنطبع)</label><input id="lnt"><div id="lpv"></div><button class="btn" id="lb">' + (S.me.role === 'owner' ? 'حفظ واعتماد' : 'حفظ وإرسال للاعتماد') + '</button><div id="lm" class="msg"></div>');
   function pv() {
     var id = $('le').value, lw = $('llw').value; if (!id || !lw) { $('lpv').innerHTML = ''; return; }
     $('lpv').innerHTML = '<p class="muted">يحسب التسوية…</p>';
@@ -394,9 +446,10 @@ function leaveForm() {
   $('le').onchange = pv; $('llw').onchange = pv; $('ler').onchange = pv;
   $('lb').onclick = function () {
     var b = this; busy(b, true);
-    call('saveLeave', S.t, {id: $('le').value, lastWork: $('llw').value, expReturn: $('ler').value, note: $('lnt').value}).then(function (r) {
-      d.remove(); var m = modal('<h2 style="color:var(--g)">✔ ' + (r.approved ? 'انحفظت الإجازة' : 'انرسلت للاعتماد') + '</h2><div class="kv"><span>تسوية الحقوق</span><b>' + n2(r.settle) + '</b></div>' + (r.flag ? '<div class="hint a">⚠ ' + esc(r.flag) + '</div>' : '') + '<p class="muted">الحقوق تنصرف بسند أونكس عادي، وبعدين يتسجّل السند هنا.</p><button class="btn l" id="ok">تمام</button>');
+    call('saveLeave', S.t, {id: $('le').value, lastWork: $('llw').value, expReturn: $('ler').value, note: $('lnt').value, reason: $('lrs').value, phone: $('lph').value}).then(function (r) {
+      d.remove(); var m = modal('<h2 style="color:var(--g)">✔ ' + (r.approved ? 'انحفظت الإجازة' : 'انرسلت للاعتماد') + '</h2><div class="kv"><span>تسوية الحقوق</span><b>' + n2(r.settle) + '</b></div>' + (r.flag ? '<div class="hint a">⚠ ' + esc(r.flag) + '</div>' : '') + '<p class="muted">الحقوق تنصرف بسند أونكس عادي، وبعدين يتسجّل السند هنا.</p>' + (r.approved ? '<button class="btn" id="lpp">طباعة نموذج الإجازة إج-' + ('000' + r.no).slice(-4) + '</button>' : '<p class="muted">النموذج ينطبع بعد اعتماد المالك.</p>') + '<button class="btn l" id="ok">تمام</button>');
       $('ok').onclick = function () { m.remove(); vLeave(); };
+      if ($('lpp')) $('lpp').onclick = function () { m.remove(); vLeave(); printDoc(null, r.no, 'leave'); };
     }).catch(function (e) { busy(b, false); msg('lm', e.message); });
   };
 }
@@ -478,5 +531,6 @@ function vMe() { $('view').innerHTML = '<div class="card"><h2>رمزي</h2><butt
 S.t = load();
 if (S.t) start(); else showLogin();
 </script>
+<div id="prt"></div>
 </body>
 </html>
