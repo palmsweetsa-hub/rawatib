@@ -249,6 +249,15 @@ function vDash() {
 function vRow(v) { return '<div class="row"><div><b>' + esc(v.name) + '</b><small>' + esc(v.method) + ' ' + esc(v.doc) + ' · ' + esc(v.label) + ' · ' + esc(v.at) + '</small></div><div class="v">' + n2(v.amount) + '</div></div>'; }
 
 // ===== الموظفين =====
+function warmEmps(list) {
+  if (S.warming) return; S.warming = true;
+  var ids = list.map(function (e) { return e.id; }).filter(function (id) { return !C['emp:' + id]; });
+  (function next(i) {
+    if (i >= ids.length || !S.t) { S.warming = false; return; }
+    if (C['emp:' + ids[i]]) return next(i + 1);
+    call('empDetail', S.t, ids[i]).then(function (d) { C['emp:' + ids[i]] = d; }, function () {}).then(function () { setTimeout(function () { next(i + 1); }, 100); });
+  })(0);
+}
 function vEmps(filter) {
   filter = filter || 'الكل';
   swr('emps', 'empList', [S.t], function (list) {
@@ -260,6 +269,7 @@ function vEmps(filter) {
     Array.prototype.forEach.call(document.querySelectorAll('.chips button'), function (b) { b.onclick = function () { vEmps(b.dataset.f); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.row.clk'), function (r) { r.onclick = function () { vEmp(r.dataset.id); }; });
     $('addE').onclick = function () { empForm({}); };
+    warmEmps(list);
   }).catch(fail);
 }
 function vEmp(id) {
@@ -351,14 +361,34 @@ function vNew() {
 }
 function vList() {
   swr('vl', 'vouchers', [S.t, false], function (rows) {
-    var own = S.me.role === 'owner';
-    $('view').innerHTML = '<div class="card"><h2>' + (S.me.role === 'store' ? 'سنداتي' : 'السندات') + '</h2>' + (rows.length > 5 ? '<input id="vq" placeholder="بحث بالاسم أو رقم السند" style="margin-bottom:8px">' : '') + (rows.length ? rows.map(function (v) {
-      return '<div class="row vr" data-q="' + esc(v.name + ' ' + v.doc + ' ' + v.label) + '"><div><b>' + esc(v.name) + '</b><small>' + esc(v.method) + ' ' + esc(v.doc) + ' · ' + esc(v.label) + ' · ' + esc(v.at) + ' · ' + esc(v.by) + (v.note ? ' · ' + esc(v.note) : '') + '</small></div><div><div class="v">' + n2(v.amount) + '</div>' + (own ? '<button class="btn r sm" data-del="' + v.no + '">حذف</button>' : '') + '</div></div>';
-    }).join('') : '<p class="muted">ما فيه سندات بعد</p>') + '</div>';
-    if ($('vq')) $('vq').oninput = function () { var q = this.value.trim(); Array.prototype.forEach.call(document.querySelectorAll('.vr'), function (r) { r.style.display = !q || r.dataset.q.indexOf(q) >= 0 ? '' : 'none'; }); };
-    Array.prototype.forEach.call(document.querySelectorAll('[data-del]'), function (b) { b.onclick = function () {
-      var d = modal('<h2>حذف السند</h2><p class="muted">الحذف ينسجّل في السجل بكل تفاصيل السند.</p><label class="req">السبب</label><input id="dr"><button class="btn r" id="dy">حذف</button><div id="dm" class="msg"></div>');
-      $('dy').onclick = function () { var x = this; busy(x, true); call('deleteVoucher', S.t, Number(b.dataset.del), $('dr').value).then(function () { d.remove(); vList(); }).catch(function (e) { busy(x, false); msg('dm', e.message); }); };
+    var own = S.me.role === 'owner', F = S.vf || (S.vf = {m: '', e: '', q: ''});
+    var months = [], names = [];
+    rows.forEach(function (v) { var m = String(v.at).slice(0, 7); if (months.indexOf(m) < 0) months.push(m); if (names.indexOf(v.name) < 0) names.push(v.name); });
+    names.sort();
+    var ml = function (m) { var p = m.split('-'); return ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][Number(p[1]) - 1] + ' ' + p[0]; };
+    $('view').innerHTML = '<div class="card"><h2>' + (S.me.role === 'store' ? 'سنداتي' : 'السندات') + '</h2>' +
+      (rows.length ? '<div style="display:flex;gap:8px"><select id="vfm"><option value="">كل الأشهر</option>' + months.map(function (m) { return '<option value="' + m + '"' + (F.m === m ? ' selected' : '') + '>' + ml(m) + '</option>'; }).join('') + '</select>' +
+        '<select id="vfe"><option value="">كل الموظفين</option>' + names.map(function (n) { return '<option' + (F.e === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select></div>' +
+        '<input id="vq" placeholder="بحث برقم السند أو الملاحظة" value="' + esc(F.q) + '" style="margin-top:8px">' +
+        '<div class="kv" style="margin-top:8px"><span id="vcnt"></span><b id="vsum"></b></div>' : '') +
+      (rows.length ? rows.map(function (v, i) {
+        return '<div class="row vr' + (own ? ' clk' : '') + '" data-i="' + i + '" data-m="' + String(v.at).slice(0, 7) + '" data-e="' + esc(v.name) + '" data-a="' + v.amount + '" data-q="' + esc(v.name + ' ' + v.doc + ' ' + v.label + ' ' + (v.note || '')) + '"><div><b>' + esc(v.name) + '</b><small>' + esc(v.method) + ' ' + esc(v.doc) + ' · ' + esc(v.label) + ' · ' + esc(v.at) + ' · ' + esc(v.by) + '</small>' + (v.note ? '<small>' + esc(v.note) + '</small>' : '') + '</div><div class="v">' + n2(v.amount) + '</div></div>';
+      }).join('') : '<p class="muted">ما فيه سندات بعد</p>') + (own && rows.length ? '<p class="muted">اضغط على السند لعرض تفاصيله أو حذفه.</p>' : '') + '</div>';
+    function apply() {
+      var n = 0, sum = 0;
+      Array.prototype.forEach.call(document.querySelectorAll('.vr'), function (r) {
+        var ok = (!F.m || r.dataset.m === F.m) && (!F.e || r.dataset.e === F.e) && (!F.q || r.dataset.q.indexOf(F.q) >= 0);
+        r.style.display = ok ? '' : 'none'; if (ok) { n++; sum += Number(r.dataset.a); }
+      });
+      if ($('vcnt')) { $('vcnt').textContent = n + ' سند'; $('vsum').textContent = 'المجموع ' + n2(Math.round(sum * 100) / 100); }
+    }
+    if ($('vfm')) { $('vfm').onchange = function () { F.m = this.value; apply(); }; $('vfe').onchange = function () { F.e = this.value; apply(); }; $('vq').oninput = function () { F.q = this.value.trim(); apply(); }; apply(); }
+    if (own) Array.prototype.forEach.call(document.querySelectorAll('.vr'), function (r) { r.onclick = function () {
+      var v = rows[Number(r.dataset.i)];
+      var d = modal('<h2>سند ' + esc(v.method) + ' ' + esc(v.doc) + '</h2><div class="kv"><span>الموظف</span><b>' + esc(v.name) + '</b></div><div class="kv"><span>المبلغ</span><b>' + n2(v.amount) + '</b></div><div class="kv"><span>البند</span><b>' + esc(v.label) + '</b></div><div class="kv"><span>سجّله</span><b>' + esc(v.by) + ' · ' + esc(v.at) + '</b></div>' + (v.note ? '<p class="muted">' + esc(v.note) + '</p>' : '') +
+        '<button class="btn l" id="dc">إغلاق</button><details style="margin-top:12px"><summary class="muted" style="cursor:pointer">حذف السند</summary><p class="muted">الحذف ينسجّل في السجل بكل تفاصيل السند.</p><label class="req">السبب</label><input id="dr"><button class="btn r" id="dy">تأكيد الحذف</button><div id="dm" class="msg"></div></details>');
+      $('dc').onclick = function () { d.remove(); };
+      $('dy').onclick = function () { var x = this; busy(x, true); call('deleteVoucher', S.t, v.no, $('dr').value).then(function () { d.remove(); vList(); }).catch(function (e) { busy(x, false); msg('dm', e.message); }); };
     }; });
   }).catch(fail);
 }
@@ -491,7 +521,8 @@ function vPay(month) {
       p.rows.map(function (r) { return '<tr><td>' + esc(r.name) + '</td><td>' + r.days + '</td><td>' + n2(r.base) + '</td><td>' + n2(r.ot) + '</td><td>' + n2(r.comm) + '</td><td>' + n2(r.ded) + '</td><td>' + n2(r.adj) + '</td><td><b>' + n2(r.net) + '</b></td></tr>'; }).join('') +
       '<tr class="tot"><td>المجموع</td><td></td><td>' + n2(p.tot.base) + '</td><td>' + n2(p.tot.ot) + '</td><td>' + n2(p.tot.comm) + '</td><td>' + n2(p.tot.ded) + '</td><td>' + n2(p.tot.adj) + '</td><td>' + n2(p.tot.net) + '</td></tr></table></div>' +
       (p.tot.adv ? '<p class="muted">سلف معتمدة في الشهر: ' + n2(p.tot.adv) + ' — تنصرف بسندات من راتب الشهر.</p>' : '') + '</div>';
-    if (st === 'مسودة') h += '<div class="card"><label>ملاحظة للمالك</label><input id="pn"><button class="btn" id="psub"' + (p.canSubmit ? '' : ' disabled') + '>رفع المسير للاعتماد</button>' + (p.canSubmit ? '' : '<p class="muted">يترفع من آخر يوم في الشهر.</p>') + '<div id="pmsg" class="msg"></div></div>';
+    if (st === 'مسودة' && own) h += '<div class="card"><p class="muted">ينتظر رفع المحاسب' + (p.canSubmit ? '.' : '، ويترفع من آخر يوم في الشهر.') + '</p>' + (p.canSubmit ? '<details><summary class="muted" style="cursor:pointer">رفعه بنفسي بدال المحاسب</summary><input id="pn" placeholder="ملاحظة"><button class="btn l" id="psub">رفع المسير للاعتماد</button></details>' : '') + '<div id="pmsg" class="msg"></div></div>';
+    if (st === 'مسودة' && !own) h += '<div class="card"><label>ملاحظة للمالك</label><input id="pn"><button class="btn" id="psub"' + (p.canSubmit ? '' : ' disabled') + '>رفع المسير للاعتماد</button>' + (p.canSubmit ? '' : '<p class="muted">يترفع من آخر يوم في الشهر.</p>') + '<div id="pmsg" class="msg"></div></div>';
     if (st === 'مرفوع' && own) h += '<div class="card"><p class="muted">رفعه ' + esc(p.run.subBy) + ' · ' + esc(p.run.subAt) + '</p><label>ملاحظة (للإرجاع)</label><input id="pn"><div style="display:flex;gap:8px"><button class="btn g" id="papp">اعتماد وقفل</button><button class="btn l" id="pret">إرجاع بملاحظة</button></div><div id="pmsg" class="msg"></div></div>';
     if (st === 'مرفوع' && !own) h += '<div class="card"><p class="muted">مرفوع ' + esc(p.run.subAt) + ' — ينتظر اعتماد المالك.</p></div>';
     if (st === 'معتمد') h += '<div class="card" style="text-align:center"><div style="font-size:26px">🔒</div><b style="color:var(--g)">اعتمده المالك ' + esc(p.run.appAt) + '</b><p class="muted">المسير مقفول، وأي تصحيح ينزل في الشهر اللي بعده كتسوية.</p></div>' +
@@ -540,7 +571,13 @@ function vSet() {
     var st = res[0], lg = res[1];
     $('view').innerHTML = '<div class="card"><h2>الإعدادات</h2>' + st.map(function (x, i) { return '<label>' + esc(x.k) + '</label><input data-k="' + esc(x.k) + '" value="' + esc(x.v) + '">'; }).join('') + '<p class="muted">النسب تنكتب كسر عشري: 0.03 = 3%، و 0.2 = 20%.</p><button class="btn" id="sb">حفظ الإعدادات</button><div id="sm" class="msg"></div></div>' +
       '<div class="card"><h2>رموز المستخدمين</h2><label>المستخدم</label><select id="su"><option value="2">2 — أمين المستودع</option><option value="3">3 — المحاسب</option></select><label>الرمز الجديد (4 أرقام)</label><input id="sp" inputmode="numeric" maxlength="4"><button class="btn l" id="spb">تعيين الرمز</button><button class="btn l" id="mypin">تغيير رمزي</button><div id="spm" class="msg"></div></div>' +
-      '<div class="card"><h2>السجل</h2>' + lg.slice(0, 60).map(function (r) { return '<div class="row"><div><b>' + esc(r.act) + '</b><small>' + esc(r.user) + ' · ' + esc(r.at) + '</small><small>' + esc(r.det) + '</small></div></div>'; }).join('') + '</div>';
+      '<div class="card"><h2>السجل</h2><div class="chips" style="padding:0 0 8px"><button data-lf="ops" class="on">العمليات</button><button data-lf="man">التعديلات اليدوية</button><button data-lf="all">الكل</button></div><div id="lgl"></div></div>';
+    function lgShow(f) {
+      var rows = lg.filter(function (r) { return f === 'all' ? true : (f === 'man' ? r.act === 'تعديل يدوي في الملف' : (r.act !== 'دخول' && r.act !== 'خروج')); }).slice(0, 80);
+      $('lgl').innerHTML = rows.length ? rows.map(function (r) { var man = r.act === 'تعديل يدوي في الملف'; return '<div class="row"><div><b' + (man ? ' style="color:var(--r)"' : '') + '>' + esc(r.act) + '</b><small>' + esc(r.user) + ' · ' + esc(r.at) + '</small><small>' + esc(r.det) + '</small></div></div>'; }).join('') : '<p class="muted">ما فيه شي</p>';
+      Array.prototype.forEach.call(document.querySelectorAll('[data-lf]'), function (b) { b.className = b.dataset.lf === f ? 'on' : ''; });
+    }
+    lgShow('ops'); Array.prototype.forEach.call(document.querySelectorAll('[data-lf]'), function (b) { b.onclick = function () { lgShow(b.dataset.lf); }; });
     $('sb').onclick = function () { var o = {}, b = this; Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (i) { o[i.dataset.k] = i.value; }); busy(b, true); call('saveSettings', S.t, o).then(function (n) { busy(b, false); msg('sm', n ? 'انحفظ (' + n + ' تغيير)' : 'ما فيه تغيير', true); }).catch(function (e) { busy(b, false); msg('sm', e.message); }); };
     $('spb').onclick = function () { var b = this; busy(b, true); call('resetUserPin', S.t, Number($('su').value), $('sp').value).then(function () { busy(b, false); $('sp').value = ''; msg('spm', 'انحفظ الرمز', true); }).catch(function (e) { busy(b, false); msg('spm', e.message); }); };
     $('mypin').onclick = function () { pinModal(false); };
