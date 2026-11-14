@@ -96,7 +96,7 @@ tr.tot td{font-weight:bold;background:var(--b2)}
 <script>
 var S = {t: null, me: null, tab: null, emps: [], months: []};
 var esc = function (s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); };
-var n2 = function (x) { return Number(x || 0).toLocaleString('en-US', {maximumFractionDigits: 2}); };
+var n2 = function (x) { x = Number(x || 0); return (x < 0 ? '\u200E' : '') + x.toLocaleString('en-US', {maximumFractionDigits: 2}); };
 var $ = function (id) { return document.getElementById(id); };
 var API_URL = 'https://script.google.com/macros/s/AKfycbxV5s5_9FEazkzvwuaC3SovHj3AUJVpZcAIL5efLWfoObKstKf42uyiD9rKqrQAKFBRDA/exec';
 function call(fn) {
@@ -255,8 +255,8 @@ function vEmps(filter) {
     var f = ['الكل', 'على رأس العمل', 'إجازة', 'متوقف'];
     var rows = list.filter(function (e) { return filter === 'الكل' || e.status === filter; });
     $('view').innerHTML = '<div class="chips">' + f.map(function (x) { return '<button data-f="' + x + '" class="' + (x === filter ? 'on' : '') + '">' + x + '</button>'; }).join('') + '</div>' +
-      '<div class="card">' + rows.map(function (e) { return '<div class="row clk" data-id="' + e.id + '"><div><b>' + esc(e.short) + ' <span class="st ' + stCls(e.status) + '">' + e.status + '</span>' + (e.pending ? '<span class="st s4">متأخرات معلّقة</span>' : '') + '</b><small>' + e.id + ' · ' + esc(e.job) + ' · ' + n2(e.salary) + '</small></div><div class="v">' + n2(e.bal) + '</div></div>'; }).join('') + '</div>' +
-      '<p class="muted">الرقم جنب كل موظف = الباقي له بعد آخر مسير معتمد.</p><button class="btn l" id="addE">+ إضافة موظف</button>';
+      '<div class="card">' + rows.map(function (e) { return '<div class="row clk" data-id="' + e.id + '"><div><b>' + esc(e.short) + ' <span class="st ' + stCls(e.status) + '">' + e.status + '</span>' + (e.pending ? '<span class="st s4">متأخرات معلّقة</span>' : '') + '</b><small>' + e.id + ' · ' + esc(e.job) + ' · ' + n2(e.salary) + '</small></div><div class="v">' + (e.pending ? 'معلّق' + (e.adv ? '<small style="display:block;color:var(--a);font-weight:normal">مصروف مقدماً ' + n2(e.adv) + '</small>' : '') : n2(e.bal)) + '</div></div>'; }).join('') + '</div>' +
+      '<p class="muted">الرقم جنب كل موظف = الباقي له بعد آخر مسير معتمد. «معلّق» = متأخراته ما انعتمدت.</p><button class="btn l" id="addE">+ إضافة موظف</button>';
     Array.prototype.forEach.call(document.querySelectorAll('.chips button'), function (b) { b.onclick = function () { vEmps(b.dataset.f); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.row.clk'), function (r) { r.onclick = function () { vEmp(r.dataset.id); }; });
     $('addE').onclick = function () { empForm({}); };
@@ -271,7 +271,8 @@ function vEmp(id) {
       '<div class="kv"><span>الحالة</span><b><span class="st ' + stCls(d.status) + '">' + d.status + '</span></b></div>' +
       '<div class="kv"><span>الوظيفة</span><b>' + esc(e.job) + '</b></div>' + (e.title ? '<div class="kv"><span>المهنة</span><b>' + esc(e.title) + '</b></div>' : '') + (e.nat ? '<div class="kv"><span>الجنسية</span><b>' + esc(e.nat) + '</b></div>' : '') + (e.iqama ? '<div class="kv"><span>رقم الإقامة أو الهوية</span><b>' + esc(e.iqama) + '</b></div>' : '') + '<div class="kv"><span>الراتب</span><b>' + n2(e.salary) + '</b></div>' +
       '<div class="kv"><span>المتأخرات المعتمدة لين 31/10</span><b>' + (d.arrearsState === 'معلّق' ? 'معلّقة' : n2(d.arrears)) + '</b></div>' +
-      '<div class="kv"><span>الباقي له بعد آخر مسير معتمد</span><b style="color:var(--r)">' + n2(d.bal) + '</b></div>' +
+      '<div class="kv"><span>الباقي له بعد آخر مسير معتمد</span><b style="color:var(--r)">' + (d.arrearsState === 'معلّق' ? 'معلّق' : n2(d.bal)) + '</b></div>' +
+      (d.adv ? '<div class="hint a">انصرف له ' + n2(d.adv) + ' مقدماً على متأخراته المعلّقة. ينخصم من المبلغ أول ما تعتمد متأخراته.</div>' : '') +
       (d.comm ? '<div class="kv"><span>العمولات الباقية</span><b>' + n2(d.comm) + '</b></div>' : '') +
       (e.notes ? '<div class="hint a">' + esc(e.notes) + '</div>' : '') + (d.arrearsNote ? '<div class="hint">' + esc(d.arrearsNote) + '</div>' : '') +
       (S.me.role === 'owner' && d.arrearsState === 'معلّق' ? '<h3>اعتماد المتأخرات لين 31/10</h3><label class="req">المبلغ المعتمد</label><input id="aa" inputmode="decimal"><label>ملاحظة</label><input id="an"><button class="btn g" id="ab">اعتماد المتأخرات</button><div id="am" class="msg"></div>' : '') + '</div>' +
