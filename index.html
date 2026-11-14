@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#1F4E78">
 <meta name="robots" content="noindex, nofollow">
 <title>رواتب شواطئ النخيل</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
 <style>
 :root{--b:#1F4E78;--b2:#DDEBF7;--g:#1E6B34;--g2:#E2EFDA;--r:#C00000;--r2:#F8D7DA;--a:#9A6700;--a2:#FFF4D6;--line:#E3E6EA;--mu:#6B7280;--bg:#F4F6F9}
 *{box-sizing:border-box;font-family:Tahoma,Arial,sans-serif}
@@ -69,6 +71,8 @@ tr.tot td{font-weight:bold;background:var(--b2)}
 .load{text-align:center;color:var(--mu);padding:30px}
 .hide{display:none}
 .flagged{border:2px solid var(--r)}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#1F2933;color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;z-index:30;opacity:.92}
+@media print{.top,.tabs,.btn,.chips,#nr,#nl{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -88,8 +92,27 @@ function call(fn) {
         if (d.err.indexOf('انتهت الجلسة') >= 0) { save(null); S.t = null; showLogin(d.err); }
         throw new Error(d.err);
       }
+      if (WRITES.indexOf(fn) >= 0) { C = {}; setTimeout(prefetch, 100); }
       return d.ok;
     });
+}
+var C = {};
+var WRITES = ['saveVoucher','deleteVoucher','saveRequest','decideRequest','saveLeave','decideLeave','returnToWork','saveEmployee','submitPayroll','decidePayroll','saveJe','reconcile','saveSettings','resetUserPin','setArrears'];
+function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2500); }
+function swr(key, fn, args, render) {
+  var tab = S.tab, had = !!C[key];
+  if (had) render(C[key]);
+  return call.apply(null, [fn].concat(args)).then(function (d) {
+    var same = had && JSON.stringify(d) === JSON.stringify(C[key]); C[key] = d;
+    if (S.tab === tab && !same) render(d);
+  }, function (e) { if (had) toast('ما قدرت أحدّث البيانات — ' + e.message); else throw e; });
+}
+function warm(key, fn, args) { if (C[key]) return; call.apply(null, [fn].concat(args)).then(function (d) { C[key] = d; }, function () {}); }
+function defMonth() { var cur = S.me.today.slice(0, 7), opts = S.months.map(function (x) { return x.m; }); var prev = opts.filter(function (m) { return m < cur; })[0]; return (prev && Number(S.me.today.slice(8)) <= 10) ? prev : opts[0]; }
+function prefetch() {
+  if (!S.t || !S.me) return;
+  if (S.me.role === 'store') { warm('vl', 'vouchers', [S.t, false]); return; }
+  warm('dash', 'dash', [S.t]); warm('emps', 'empList', [S.t]); warm('req', 'requests', [S.t]); warm('leave', 'leaves', [S.t]); warm('vl', 'vouchers', [S.t, false]); warm('pay:' + defMonth(), 'payroll', [S.t, defMonth()]);
 }
 function save(t) { try { if (t) localStorage.setItem('tok', t); else localStorage.removeItem('tok'); } catch (e) {} }
 function load() { try { return localStorage.getItem('tok'); } catch (e) { return null; } }
@@ -108,12 +131,12 @@ function showLogin(err) {
   $('lp').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('lb').click(); });
   $('lb').onclick = function () {
     var b = this; busy(b, true);
-    call('login', $('lu').value, $('lp').value).then(function (r) { S.t = r.token; save(r.token); start(); }).catch(function (e) { busy(b, false); msg('lm', e.message); });
+    call('login', $('lu').value, $('lp').value).then(function (r) { S.t = r.token; save(r.token); C = {}; start(r.boot); }).catch(function (e) { busy(b, false); msg('lm', e.message); });
   };
 }
-function start() {
+function start(pre) {
   $('app').innerHTML = '<div class="load">جاري التحميل…</div>';
-  call('boot', S.t).then(function (b) {
+  (pre ? Promise.resolve(pre) : call('boot', S.t)).then(function (b) {
     S.me = b; S.emps = b.emps; S.months = b.months;
     var tabs = b.role === 'store' ? [['vnew', 'سند جديد'], ['vlist', 'سنداتي']] :
       b.role === 'acc' ? [['dash', 'الملخص'], ['emps', 'الموظفين'], ['vnew', 'سند جديد'], ['req', 'الطلبات'], ['leave', 'الإجازات'], ['pay', 'المسير'], ['vlist', 'السندات'], ['rec', 'المطابقة'], ['me', 'رمزي']] :
@@ -124,6 +147,7 @@ function start() {
     $('out').onclick = function () { call('logout', S.t); save(null); S.t = null; showLogin(); };
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (bt) { bt.onclick = function () { go(bt.dataset.t); }; });
     if (b.mustChange) { go(tabs[0][0]); pinModal(true); } else go(tabs[0][0]);
+    setTimeout(prefetch, 300);
   }).catch(function (e) { showLogin(e.message); });
 }
 function go(t, arg) {
@@ -147,7 +171,7 @@ function pinModal(force) {
 
 // ===== الملخص =====
 function vDash() {
-  call('dash', S.t).then(function (d) {
+  swr('dash', 'dash', [S.t], function (d) {
     var k = d.kpi, own = S.me.role === 'owner';
     $('view').innerHTML = '<div class="kpis">' +
       '<div class="kpi ' + (k.pending ? 'w' : 'ok') + '"><small>' + (own ? 'تنتظر اعتمادك' : 'تنتظر اعتماد المالك') + '</small><b>' + k.pending + '</b></div>' +
@@ -165,7 +189,7 @@ function vRow(v) { return '<div class="row"><div><b>' + esc(v.name) + '</b><smal
 // ===== الموظفين =====
 function vEmps(filter) {
   filter = filter || 'الكل';
-  call('empList', S.t).then(function (list) {
+  swr('emps', 'empList', [S.t], function (list) {
     var f = ['الكل', 'على رأس العمل', 'إجازة', 'متوقف'];
     var rows = list.filter(function (e) { return filter === 'الكل' || e.status === filter; });
     $('view').innerHTML = '<div class="chips">' + f.map(function (x) { return '<button data-f="' + x + '" class="' + (x === filter ? 'on' : '') + '">' + x + '</button>'; }).join('') + '</div>' +
@@ -177,8 +201,8 @@ function vEmps(filter) {
   }).catch(fail);
 }
 function vEmp(id) {
-  $('view').innerHTML = '<div class="load">جاري التحميل…</div>';
-  call('empDetail', S.t, Number(id)).then(function (d) {
+  if (!C['emp:' + id]) $('view').innerHTML = '<div class="load">جاري التحميل…</div>';
+  swr('emp:' + id, 'empDetail', [S.t, Number(id)], function (d) {
     var e = d.e, L = d.leave;
     $('view').innerHTML = '<button class="btn l sm" onclick="go(\'emps\')">← رجوع</button>' +
       '<div class="card"><h2>' + esc(e.name) + ' <span class="muted">' + e.id + '</span></h2>' +
@@ -187,7 +211,8 @@ function vEmp(id) {
       '<div class="kv"><span>المتأخرات المعتمدة لين 31/10</span><b>' + (d.arrearsState === 'معلّق' ? 'معلّقة' : n2(d.arrears)) + '</b></div>' +
       '<div class="kv"><span>الباقي له بعد آخر مسير معتمد</span><b style="color:var(--r)">' + n2(d.bal) + '</b></div>' +
       (d.comm ? '<div class="kv"><span>العمولات الباقية</span><b>' + n2(d.comm) + '</b></div>' : '') +
-      (e.notes ? '<div class="hint a">' + esc(e.notes) + '</div>' : '') + (d.arrearsNote ? '<div class="hint">' + esc(d.arrearsNote) + '</div>' : '') + '</div>' +
+      (e.notes ? '<div class="hint a">' + esc(e.notes) + '</div>' : '') + (d.arrearsNote ? '<div class="hint">' + esc(d.arrearsNote) + '</div>' : '') +
+      (S.me.role === 'owner' && d.arrearsState === 'معلّق' ? '<h3>اعتماد المتأخرات لين 31/10</h3><label class="req">المبلغ المعتمد</label><input id="aa" inputmode="decimal"><label>ملاحظة</label><input id="an"><button class="btn g" id="ab">اعتماد المتأخرات</button><div id="am" class="msg"></div>' : '') + '</div>' +
       '<div class="card"><h2>الباقي له حسب البند</h2>' + (d.remain.length ? d.remain.map(function (r) { return '<div class="kv"><span>' + esc(r.label) + '</span><b>' + (r.blocked ? 'معلّق' : n2(r.rem)) + '</b></div>'; }).join('') : '<p class="muted">ما له شي باقي</p>') + '</div>' +
       '<div class="card"><h2>رصيد الإجازة ' + S.me.today.slice(0, 4) + '</h2><div class="kv"><span>المستحق</span><b>' + L.annual + ' يوم</b></div><div class="kv"><span>المأخوذ</span><b>' + L.used + ' يوم</b></div><div class="kv"><span>الباقي</span><b style="color:' + (L.left < 0 ? 'var(--r)' : 'var(--g)') + '">' + L.left + ' يوم</b></div>' +
       (d.leaves.length ? '<h3>الإجازات</h3>' + d.leaves.map(function (l) { return '<div class="kv"><span>آخر يوم ' + esc(l.lastWork) + (l.ret ? ' · باشر ' + esc(l.ret) : (l.expReturn ? ' · الرجوع ' + esc(l.expReturn) : ' · مفتوحة')) + '</span><b><span class="st ' + stCls(l.state) + '">' + esc(l.state) + '</span></b></div>'; }).join('') : '') + '</div>' +
@@ -196,6 +221,7 @@ function vEmp(id) {
       '<button class="btn l" id="edE">تعديل بيانات الموظف</button><button class="btn l" id="prE">طباعة كشف الموظف</button>';
     $('edE').onclick = function () { empForm(e); };
     $('prE').onclick = function () { window.print(); };
+    if ($('ab')) $('ab').onclick = function () { var b = this; busy(b, true); call('setArrears', S.t, e.id, $('aa').value, $('an').value).then(function () { vEmp(e.id); }).catch(function (er) { busy(b, false); msg('am', er.message); }); };
   }).catch(fail);
 }
 function empForm(e) {
@@ -260,11 +286,12 @@ function vNew() {
   };
 }
 function vList() {
-  call('vouchers', S.t, false).then(function (rows) {
+  swr('vl', 'vouchers', [S.t, false], function (rows) {
     var own = S.me.role === 'owner';
-    $('view').innerHTML = '<div class="card"><h2>' + (S.me.role === 'store' ? 'سنداتي' : 'السندات') + '</h2>' + (rows.length ? rows.map(function (v) {
-      return '<div class="row"><div><b>' + esc(v.name) + '</b><small>' + esc(v.method) + ' ' + esc(v.doc) + ' · ' + esc(v.label) + ' · ' + esc(v.at) + ' · ' + esc(v.by) + (v.note ? ' · ' + esc(v.note) : '') + '</small></div><div><div class="v">' + n2(v.amount) + '</div>' + (own ? '<button class="btn r sm" data-del="' + v.no + '">حذف</button>' : '') + '</div></div>';
+    $('view').innerHTML = '<div class="card"><h2>' + (S.me.role === 'store' ? 'سنداتي' : 'السندات') + '</h2>' + (rows.length > 5 ? '<input id="vq" placeholder="بحث بالاسم أو رقم السند" style="margin-bottom:8px">' : '') + (rows.length ? rows.map(function (v) {
+      return '<div class="row vr" data-q="' + esc(v.name + ' ' + v.doc + ' ' + v.label) + '"><div><b>' + esc(v.name) + '</b><small>' + esc(v.method) + ' ' + esc(v.doc) + ' · ' + esc(v.label) + ' · ' + esc(v.at) + ' · ' + esc(v.by) + (v.note ? ' · ' + esc(v.note) : '') + '</small></div><div><div class="v">' + n2(v.amount) + '</div>' + (own ? '<button class="btn r sm" data-del="' + v.no + '">حذف</button>' : '') + '</div></div>';
     }).join('') : '<p class="muted">ما فيه سندات بعد</p>') + '</div>';
+    if ($('vq')) $('vq').oninput = function () { var q = this.value.trim(); Array.prototype.forEach.call(document.querySelectorAll('.vr'), function (r) { r.style.display = !q || r.dataset.q.indexOf(q) >= 0 ? '' : 'none'; }); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-del]'), function (b) { b.onclick = function () {
       var d = modal('<h2>حذف السند</h2><p class="muted">الحذف ينسجّل في السجل بكل تفاصيل السند.</p><label class="req">السبب</label><input id="dr"><button class="btn r" id="dy">حذف</button><div id="dm" class="msg"></div>');
       $('dy').onclick = function () { var x = this; busy(x, true); call('deleteVoucher', S.t, Number(b.dataset.del), $('dr').value).then(function () { d.remove(); vList(); }).catch(function (e) { busy(x, false); msg('dm', e.message); }); };
@@ -275,7 +302,7 @@ function vList() {
 // ===== الطلبات =====
 function vReq(filter) {
   filter = filter || 'بانتظار الاعتماد';
-  call('requests', S.t).then(function (rows) {
+  swr('req', 'requests', [S.t], function (rows) {
     var own = S.me.role === 'owner', f = ['بانتظار الاعتماد', 'معتمد', 'مرفوض', 'الكل'];
     var list = rows.filter(function (r) { return filter === 'الكل' || r.state === filter; });
     $('view').innerHTML = '<button class="btn" id="nr">+ طلب جديد</button><div class="chips" style="margin-top:12px">' + f.map(function (x) { return '<button data-f="' + x + '" class="' + (x === filter ? 'on' : '') + '">' + x + '</button>'; }).join('') + '</div>' +
@@ -326,7 +353,7 @@ function reqForm() {
 
 // ===== الإجازات =====
 function vLeave() {
-  call('leaves', S.t).then(function (rows) {
+  swr('leave', 'leaves', [S.t], function (rows) {
     var own = S.me.role === 'owner';
     var open = rows.filter(function (l) { return l.open; }), pend = rows.filter(function (l) { return l.state === 'بانتظار الاعتماد'; }), rest = rows.filter(function (l) { return !l.open && l.state !== 'بانتظار الاعتماد'; });
     function card(l, act) {
@@ -378,8 +405,8 @@ function leaveForm() {
 function vPay(month) {
   var cur = S.me.today.slice(0, 7);
   var opts = S.months.map(function (x) { return x.m; });
-  if (!month) { var prev = opts.filter(function (m) { return m < cur; })[0]; month = (prev && Number(S.me.today.slice(8)) <= 10) ? prev : opts[0]; }
-  call('payroll', S.t, month).then(function (p) {
+  if (!month) month = defMonth();
+  swr('pay:' + month, 'payroll', [S.t, month], function (p) {
     var own = S.me.role === 'owner', st = p.state, idx = {'مسودة': 0, 'مرفوع': 1, 'معتمد': 3}[st];
     var steps = ['مسودة', 'رفعه المحاسب', 'اعتماد المالك', 'مقفول'].map(function (x, i) { return '<div class="' + (i < idx ? 'dn' : (i === idx || (st === 'مرفوع' && i === 2) ? 'cur' : '')) + '">' + x + '</div>'; }).join('');
     var h = '<div class="card"><label style="margin-top:0">الشهر</label><select id="pm">' + S.months.map(function (x) { return '<option value="' + x.m + '"' + (x.m === month ? ' selected' : '') + '>' + x.label + '</option>'; }).join('') + '</select></div>' +
