@@ -115,6 +115,9 @@ details summary{list-style:none}details summary::-webkit-details-marker{display:
 .navyc{background:var(--n);color:#fff;border-radius:24px;padding:16px;margin-bottom:12px}.navyc small{color:#C9B27A;font-size:12.5px}.navyc .big{font-size:32px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}.navyc .big span{font-size:13px;font-weight:500;color:#AEB8CC}
 .navyc .acts{display:flex;gap:8px;margin-top:12px}.navyc .acts button{flex:1;min-height:44px;border-radius:22px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;font-size:13.5px;font-weight:500}.navyc .acts button.gd{background:var(--gd);border-color:var(--gd);color:var(--n);font-weight:700}
 .navyc .hint{background:rgba(255,255,255,.08);color:#F3E7CF}
+.tsp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14)}.tsp small{display:block;font-size:11.5px}.tsp b{font-size:15px;font-variant-numeric:tabular-nums}
+.bmt{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}.bmt th{font-weight:500;color:var(--mu);font-size:12.5px;text-align:right;padding:6px 4px}.bmt td{padding:10px 4px;border-top:1px solid #F0ECE3}.bmt th:first-child{width:36%}.bmt tr.pt td{background:var(--a2);color:var(--a)}.bmt tr.pt td:first-child{border-radius:0 10px 10px 0}.bmt tr.pt td:last-child{border-radius:10px 0 0 10px}.bmt .ok{color:var(--g);font-weight:700}.bmt .rm{font-weight:700;color:var(--n)}.bmt tr.pt .rm{color:var(--a)}.bmt tr.sep td{padding:8px 4px 2px;font-size:12px;color:var(--mu);border-top:0}
+.alc{display:block;font-size:12px;color:var(--gd3);margin-top:2px}
 .bar{height:7px;border-radius:4px;background:#EEF0F4;overflow:hidden;margin-top:8px;display:flex}.bar i{display:block;height:100%;border-radius:4px;background:var(--gd)}
 .lg{display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--mu)}.lg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px}
 /* شريط التنقل */
@@ -457,6 +460,23 @@ function vEmp(id) {
   if (!C['emp:' + id]) $('view').innerHTML = skel();
   swr('emp:' + id, 'empDetail', [S.t, Number(id)], function (d) {
     var e = d.e, L = d.leave, own = S.me.role === 'owner', pend = d.arrearsState === 'معلّق';
+    var bm = d.bm;
+    var bmCard = function () {
+      var arr = 0, sal = 0, lastKind = '';
+      var rows = bm.rows.map(function (r) {
+        if (r.kind === 'arr') arr += r.rem; else sal += r.rem;
+        var sep = r.kind !== lastKind ? '<tr class="sep"><td colspan="4">' + (r.kind === 'arr' ? 'متأخرات لين 31/10' : 'رواتب النظام الجديد') + '</td></tr>' : '';
+        lastKind = r.kind;
+        var part = r.paid > 0.009 && r.rem > 0.009;
+        return sep + '<tr class="' + (part ? 'pt' : '') + '"><td>' + esc(r.label) + '</td><td>' + n2(r.due) + '</td><td>' + (r.paid > 0.009 ? n2(r.paid) : '0') + '</td><td>' + (r.rem > 0.009 ? '<span class="rm">' + n2(r.rem) + '</span>' : '<span class="ok">خالص</span>') + '</td></tr>';
+      }).join('');
+      var body = (bm.pending ? '<div class="kv"><span>متأخرات لين 31/10</span><b>معلّقة</b></div>' : '') +
+        (rows ? '<table class="bmt"><tr><th>الشهر</th><th>المستحق</th><th>انصرف</th><th>الباقي</th></tr>' + rows + '</table>' : (bm.pending ? '' : empty('check', 'ما له رواتب باقية'))) +
+        (bm.comm > 0.009 ? '<div class="kv" style="border-bottom:0;margin-top:6px"><span>العمولات</span><b>باقي ' + n2(bm.comm) + '</b></div>' : '') +
+        (rows ? '<small class="muted">أي سند متأخرات ينخصم من أقدم شهر أول.</small>' : '');
+      return {html: '<div class="card"><h2>الرواتب حسب الشهر</h2>' + body + '</div>', arr: Math.round(arr * 100) / 100, sal: Math.round(sal * 100) / 100};
+    };
+    var BM = bm ? bmCard() : null;
     var remain = d.remain.length ? d.remain.map(function (r) {
       var tot = (r.paid || 0) + (r.rem || 0), pct = tot > 0 ? Math.round((r.paid || 0) / tot * 100) : 0;
       return '<div style="padding:10px 0;border-bottom:1px solid #F0ECE3"><div style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><span>' + esc(r.label) + '</span><span>' + (r.blocked ? '<b>معلّق</b>' : '<b style="color:var(--n)">' + n2(r.rem) + '</b> <small class="muted">باقي من ' + n2(tot) + '</small>') + '</span></div>' +
@@ -467,11 +487,14 @@ function vEmp(id) {
     $('view').innerHTML = '<div class="ph"><button class="ib" id="bk" aria-label="رجوع">' + I('back', 20) + '</button><div class="acts"><button class="ib" id="prE" aria-label="طباعة">' + I('print', 20) + '</button><button class="ib" id="edE" aria-label="تعديل">' + I('edit', 20) + '</button></div></div>' +
       '<div class="prof"><span class="av">' + ini(e.short || e.name) + '</span><div style="flex:1;min-width:0"><h1>' + esc(e.name) + '</h1><small>رقم ' + e.id + ' · ' + esc(e.title || e.job) + ' · الراتب ' + n2(e.salary) + '</small></div><span class="st ' + stCls(d.status) + '">' + d.status + '</span></div>' +
       '<div class="cols"><div>' +
-      '<div class="navyc"><small>الباقي له بعد آخر مسير معتمد</small><div class="big">' + (pend ? 'معلّق' : n2(d.bal) + ' <span>ر.س</span>') + '</div>' +
+      (BM ? '<div class="navyc"><small>إجمالي المستحق له</small><div class="big">' + n2(bm.total) + ' <span>ر.س</span></div>' +
+        '<div class="tsp"><div><small>متأخرات</small><b>' + (pend ? 'معلّقة' : n2(BM.arr)) + '</b></div><div><small>رواتب الأشهر الحالية</small><b>' + n2(BM.sal) + '</b></div><div><small>عمولات</small><b>' + n2(bm.comm) + '</b></div></div>' +
+        (pend ? '' : '<div class="hint">الباقي بعد آخر مسير معتمد: ' + n2(d.bal) + '</div>')
+      : '<div class="navyc"><small>الباقي له بعد آخر مسير معتمد</small><div class="big">' + (pend ? 'معلّق' : n2(d.bal) + ' <span>ر.س</span>') + '</div>') +
       (d.adv ? '<div class="hint">انصرف له ' + n2(d.adv) + ' مقدماً على متأخراته المعلّقة. ينخصم أول ما تعتمد متأخراته.</div>' : '') +
       '<div class="acts"><button class="gd" id="eV">سند صرف</button><button id="eR">طلب</button><button id="eL">إجازة</button></div></div>' +
       (own && pend ? '<div class="card" style="border-color:#E2C98F"><h2>اعتماد المتأخرات لين 31/10</h2>' + (d.arrearsNote ? '<div class="hint" style="margin-top:0">' + esc(d.arrearsNote) + '</div>' : '') + '<label class="req">المبلغ المعتمد</label><input id="aa" inputmode="decimal"><label>ملاحظة</label><input id="an"><button class="btn g" id="ab">اعتماد المتأخرات</button><div id="am" class="msg"></div></div>' : '') +
-      '<div class="card"><h2>الباقي حسب البند</h2>' + remain + '</div>' +
+      (BM ? BM.html : '<div class="card"><h2>الباقي حسب البند</h2>' + remain + '</div>') +
       '<div class="card"><div class="sec-h"><h2>رصيد الإجازة ' + S.me.today.slice(0, 4) + '</h2><span style="font-size:13px"><b style="color:' + (L.left < 0 ? 'var(--r)' : 'var(--g)') + '">' + L.left + '</b> <span class="muted">يوم باقي</span></span></div>' +
       '<div class="bar" style="height:9px"><i style="width:' + lpct + '%;background:var(--gd)"></i><i style="flex:1;background:#5B8C3A;border-radius:0"></i></div><div class="lg"><span><i style="background:#5B8C3A"></i>باقي ' + L.left + '</span><span><i style="background:var(--gd)"></i>مأخوذ ' + L.used + '</span><span>من ' + L.annual + '</span></div>' +
       (d.leaves.length ? d.leaves.map(function (l) { return '<div class="kv"><span>آخر يوم ' + esc(l.lastWork) + (l.ret ? ' · باشر ' + esc(l.ret) : (l.expReturn ? ' · الرجوع ' + esc(l.expReturn) : ' · مفتوحة')) + '</span><b><span class="st ' + stCls(l.state) + '">' + esc(l.state) + '</span></b></div>'; }).join('') : '') + '</div>' +
@@ -479,7 +502,7 @@ function vEmp(id) {
       '<div class="card"><h2>البيانات</h2>' + info.map(function (x) { return '<div class="kv"><span>' + x[0] + '</span><b>' + (x[1] ? esc(x[1]) : '<span class="muted">—</span>') + '</b></div>'; }).join('') +
       (e.notes ? '<div class="hint a">' + esc(e.notes) + '</div>' : '') + (!own && d.arrearsNote ? '<div class="hint">' + esc(d.arrearsNote) + '</div>' : '') + '</div>' +
       (d.reqs.length ? '<div class="card"><h2>الطلبات</h2>' + d.reqs.map(function (r) { return '<div class="kv"><span>' + esc(r.type) + ' · ' + esc(r.month) + '</span><b>' + n2(r.amount) + ' <span class="st ' + stCls(r.state) + '">' + esc(r.state) + '</span></b></div>'; }).join('') + '</div>' : '') +
-      '<div class="card"><h2>آخر السندات</h2>' + (d.vouchers.length ? d.vouchers.map(function (v) { return '<div class="row">' + stamp(v.at) + '<div class="rx"><b>' + esc(v.method) + ' ' + esc(v.doc) + '</b><small>' + esc(v.label) + '</small></div><div class="v">' + n2(v.amount) + '</div></div>'; }).join('') : empty('receipt', 'ما فيه سندات', 'في النظام الجديد')) + '</div>' +
+      '<div class="card"><h2>آخر السندات</h2>' + (d.vouchers.length ? d.vouchers.map(function (v) { return '<div class="row">' + stamp(v.at) + '<div class="rx"><b>' + esc(v.method) + ' ' + esc(v.doc) + '</b><small>' + esc(v.label) + '</small>' + (bm && bm.alloc && bm.alloc[v.no] && v.label !== bm.alloc[v.no] ? '<span class="alc">انخصم من: ' + esc(bm.alloc[v.no]) + '</span>' : '') + '</div><div class="v">' + n2(v.amount) + '</div></div>'; }).join('') : empty('receipt', 'ما فيه سندات', 'في النظام الجديد')) + '</div>' +
       '</div></div>';
     $('bk').onclick = function () { go('emps'); };
     $('edE').onclick = function () { empForm(e); };
