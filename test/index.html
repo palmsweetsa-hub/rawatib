@@ -895,7 +895,7 @@ function oItems_(d) {
   var it = [], m = C.morning, own = S.me.role === 'owner';
   if (m && !m.none) ((m.brief || {}).todo || []).filter(function (x) { return x.group === 'now'; }).forEach(function (x) {
     var p = String(x.title || '').split(' — ');
-    it.push({key: 'm:' + (x.id || p[0]) + '|' + Math.round(x.amount || 0), lv: x.level === 'r' ? 'r' : 'a', ic: MOR_IC[x.icon] || 'alert', src: oSrc_(x), t: p[0], s: p.slice(1).join(' — ') || x.when || '', amt: x.amount, dir: x.dir, det: x.detail, links: x.links});
+    it.push({key: 'm:' + (x.id || p[0]) + '|' + Math.round(x.amount || 0), lv: x.level === 'r' ? 'r' : 'a', ic: MOR_IC[x.icon] || 'alert', src: oSrc_(x), dl: String(x.title || ''), t: p[0], s: p.slice(1).join(' — ') || x.when || '', amt: x.amount, dir: x.dir, det: x.detail, links: x.links});
   });
   if (C.coll) crItems_(C.coll).forEach(function (x) {
     it.push({key: 'c:' + x.kind + '|' + Math.round(x.amt || 0) + '|' + String(x.txt).replace(/<[^>]+>/g, '').slice(0, 40), lv: x.red ? 'r' : 'a', ic: 'scale', src: 'الآجل', t: x.kind, s: '', htm: x.txt, amt: x.amt, btn: x.btn, fn: function () { crGo_(x.ct, x.cf2); }});
@@ -908,7 +908,7 @@ function oItems_(d) {
     var r = of['التقرير'] || {}, ap = ((of['اللوحة'] || {})['طلبات_الموافقة'] || []).filter(function (a) { return a['القرار'] === 'معلّق'; }), dc = mdRows_(r['القرارات']);
     if (dc.length + ap.length) it.push({key: 'o:' + (of['التاريخ'] || ''), lv: 'a', ic: 'office', src: 'المكاتب', t: dc.length + ' قرارات و' + ap.length + ' طلبات موافقة', s: '', det: dc[0] ? 'أهمها: ' + ofTxt_(dc[0][0]) : '', btn: 'افتحها', fn: function () { S.ot = 'dec'; go('offices'); }});
   }
-  var urg = function (x) { return x.lv !== 'r' ? 2 : (/اليوم|آخر مهلة|تنتهي اليوم/.test(x.t + ' ' + (x.s || '')) ? 0 : 1); };
+  var urg = function (x) { return x.lv !== 'r' ? 2 : (/اليوم|آخر مهلة|تنتهي اليوم/.test(x.dl !== undefined ? x.dl : x.t) ? 0 : 1); };
   return it.map(function (x, i) { x.i = i; x.u = urg(x); return x; }).sort(function (a, b) { return a.u - b.u || (Number(b.amt) || 0) - (Number(a.amt) || 0) || a.i - b.i; });
 }
 function oSheet_(title, body) { modal('<div class="sec-h"><h2>' + title + '</h2></div>' + body); }
