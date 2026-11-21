@@ -259,25 +259,30 @@ function call(fn) {
     .then(function (r) { return r.json(); }, function () { throw new Error('ما فيه اتصال بالإنترنت — حاول مرة ثانية'); })
     .then(function (d) {
       if (d.err !== undefined) {
-        if (d.err.indexOf('انتهت الجلسة') >= 0) { save(null); S.t = null; showLogin(d.err); }
+        if (d.err.indexOf('انتهت الجلسة') >= 0) { save(null); cClear_(); S.t = null; showLogin(d.err); }
         throw new Error(d.err);
       }
-      if (WRITES.indexOf(fn) >= 0) { C = {}; setTimeout(prefetch, 100); }
+      if (WRITES.indexOf(fn) >= 0) { C = {}; S.fr = {}; setTimeout(prefetch, 100); }
       return d.ok;
     });
 }
 var C = {};
-var WRITES = ['saveVoucher','deleteVoucher','saveRequest','decideRequest','saveLeave','decideLeave','returnToWork','saveEmployee','submitPayroll','decidePayroll','saveJe','reconcile','saveSettings','resetUserPin','setArrears','addPromise','setPromise','addCaseFollow'];
+var WRITES = ['saveVoucher','deleteVoucher','saveRequest','decideRequest','saveLeave','decideLeave','returnToWork','saveEmployee','submitPayroll','decidePayroll','saveJe','reconcile','saveSettings','resetUserPin','setArrears','addPromise','setPromise','addCaseFollow','setPerms','saveMorningSettings','backupNow'];
 function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2500); }
 function swr(key, fn, args, render) {
   var tab = S.tab, had = !!C[key];
   if (had) render(C[key]);
   return call.apply(null, [fn].concat(args)).then(function (d) {
-    var same = had && JSON.stringify(d) === JSON.stringify(C[key]); C[key] = d;
+    var same = had && JSON.stringify(d) === JSON.stringify(C[key]); C[key] = d; (S.fr = S.fr || {})[key] = 1;
     if (S.tab === tab && !same) render(d);
   }, function (e) { if (had) toast('ما قدرت أحدّث البيانات — ' + e.message); else throw e; });
 }
-function warm(key, fn, args) { if (C[key]) return; call.apply(null, [fn].concat(args)).then(function (d) { C[key] = d; }, function () {}); }
+function warm(key, fn, args) { S.fr = S.fr || {}; if (S.fr[key]) return; S.fr[key] = 1; call.apply(null, [fn].concat(args)).then(function (d) { C[key] = d; }, function () { S.fr[key] = 0; }); }
+var PKEYS = ['dash', 'emps', 'req', 'leave', 'vl', 'morning', 'coll', 'credit', 'offices', 'decDone', 'branches', 'syslog'];
+function cSave_() { if (!S.t || !S.me || !S.boot) return; try { var o = {at: Date.now(), boot: S.boot, c: {}}; PKEYS.forEach(function (k) { if (C[k] !== undefined) o.c[k] = C[k]; }); var s = JSON.stringify(o); if (s.length < 3e6) localStorage.setItem('cache_test', s); } catch (e) {} }
+function cLoad_() { try { var o = JSON.parse(localStorage.getItem('cache_test') || 'null'); if (!o || !o.boot || Date.now() - o.at > 3 * 864e5) return null; PKEYS.forEach(function (k) { if (o.c[k] !== undefined && C[k] === undefined) C[k] = o.c[k]; }); return o; } catch (e) { return null; } }
+function cClear_() { try { localStorage.removeItem('cache_test'); } catch (e) {} }
+setInterval(cSave_, 8000); document.addEventListener('visibilitychange', function () { if (document.hidden) cSave_(); }); window.addEventListener('pagehide', cSave_);
 function defMonth() { var cur = S.me.today.slice(0, 7), opts = S.months.map(function (x) { return x.m; }); var prev = opts.filter(function (m) { return m < cur; })[0]; return (prev && Number(S.me.today.slice(8)) <= 10) ? prev : opts[0]; }
 function prefetch() {
   if (!S.t || !S.me) return;
@@ -405,15 +410,17 @@ function start(pre) {
     S.main = b.role === 'store' ? ['vlist'] : ['dash', 'emps', 'vlist'];
     S.more = b.role === 'store' ? ['me'] : (b.role === 'acc' ? ['credit', 'pay', 'rec', 'req', 'leave', 'me'] : ['branches', 'offices', 'credit', 'pay', 'rec', 'req', 'leave', 'sys', 'set']);
     S.side = b.role === 'owner' ? ['dash', 'branches', 'offices', 'credit', 'vlist', 'pay', 'rec', 'emps', 'req', 'leave', 'sys', 'set'] : (b.role === 'acc' ? ['dash', 'credit', 'vlist', 'pay', 'rec', 'emps', 'req', 'leave', 'me'] : S.main.concat(S.more));
+    S.canNew = true;
+    if (b.role !== 'owner' && Array.isArray(b.perms)) { var pm = b.perms, okT = function (x) { return x === 'me' || pm.indexOf(x) >= 0; }; S.main = S.main.filter(okT); S.more = S.more.filter(okT); S.side = S.side.filter(okT); S.canNew = pm.indexOf('vnew') >= 0; }
+    S.boot = b;
     S.grp = b.role === 'store' ? {} : {dash: 'اليوم', credit: 'المال والتحصيل', emps: 'الفريق', sys: 'الإدارة', me: 'حسابي'};
     S.tabs = S.main.concat(S.more).map(function (t) { return [t, tabName(t)]; });
     document.body.classList.add('in');
     var ni = function (t) { return '<button class="ni" data-t="' + t + '" aria-label="' + tabName(t) + '">' + I(TAB[t][1]) + '<span>' + tabName(t) + '</span></button>'; };
     var fab = '<button class="fab" data-t="vnew" aria-label="سند جديد">' + I('plus', 24, 2.3) + '</button>';
-    var nav = b.role === 'store' ? ni('vlist') + fab + '<button class="ni" id="nmore" aria-label="المزيد">' + I('more') + '<span>المزيد</span></button>' :
-      ni('dash') + ni('emps') + fab + ni('vlist') + '<button class="ni" id="nmore" aria-label="المزيد">' + I('more') + '<span>المزيد</span></button>';
+    var nav = S.main.slice(0, 2).map(ni).join('') + (S.canNew ? fab : '') + S.main.slice(2).map(ni).join('') + '<button class="ni" id="nmore" aria-label="المزيد">' + I('more') + '<span>المزيد</span></button>';
     var side = '<aside class="side"><div class="brand"><img src="logo-w.png" alt=""><div><b>شواطئ النخيل</b><small>النظام الموحد</small></div></div>' +
-      '<button class="btn gd new" data-t="vnew">' + I('plus', 18, 2.3) + 'سند جديد</button>' + (b.role === 'store' ? '' : '<button type="button" class="qs" id="qs">' + I('srch', 17) + 'بحث سريع<kbd>Ctrl K</kbd></button>') + '<nav aria-label="الأقسام">' +
+      (S.canNew ? '<button class="btn gd new" data-t="vnew">' + I('plus', 18, 2.3) + 'سند جديد</button>' : '') + (b.role === 'store' ? '' : '<button type="button" class="qs" id="qs">' + I('srch', 17) + 'بحث سريع<kbd>Ctrl K</kbd></button>') + '<nav aria-label="الأقسام">' +
       sideNav_() + '</nav>' +
       '<div class="who"><span class="av" style="background:var(--gd);color:var(--n)">' + ini(dName_(b)) + '</span><div><b>' + esc(dName_(b)) + '</b><small>' + (b.role === 'owner' ? 'المالك' : dayLabel(b.today, true)) + '</small></div><button class="ib" id="out" aria-label="خروج">' + I('out', 20) + '</button></div></aside>';
     $('app').innerHTML = side + '<main class="wrap" id="view"></main><nav class="fnav" aria-label="التنقل الرئيسي">' + nav + '</nav>';
@@ -422,13 +429,13 @@ function start(pre) {
     var sn = document.querySelector('.side nav'), ovf = function () { if (sn) sn.classList.toggle('ovf', sn.scrollHeight > sn.clientHeight + 2 && sn.scrollTop + sn.clientHeight < sn.scrollHeight - 2); };
     if (sn) { sn.onscroll = ovf; window.addEventListener('resize', ovf); setTimeout(ovf, 50); }
     $('out').onclick = logout; if ($('qs')) $('qs').onclick = qSearch_;
-    var first = b.role === 'store' ? 'vnew' : 'dash';
+    var first = b.role === 'store' ? (S.canNew ? 'vnew' : (S.main[0] || 'me')) : (S.side.indexOf('dash') >= 0 ? 'dash' : (S.side[0] || 'me'));
     go(first); if (b.mustChange) pinModal(true);
-    setTimeout(prefetch, 300);
+    setTimeout(prefetch, 1200);
   }).catch(function (e) { showLogin(e.message); });
 }
 function dName_(b) { return b && b.role === 'owner' ? 'مهند' : (b ? b.name : ''); }
-function logout() { call('logout', S.t).catch(function () {}); save(null); S.t = null; C = {}; showLogin(); }
+function logout() { call('logout', S.t).catch(function () {}); save(null); cClear_(); S.t = null; S.boot = null; C = {}; S.fr = {}; showLogin(); }
 function moreSheet() {
   var d = modal('<h2>المزيد</h2><div class="tiles">' + S.more.map(function (t) { return '<button class="tile' + (S.tab === t ? ' on' : '') + '" data-mt="' + t + '"><span class="ti">' + I(TAB[t][1]) + '</span>' + tabName(t) + (t === 'req' && S.pend ? '<i class="bdot" style="position:absolute;top:12px;left:14px;width:9px;height:9px;border-radius:50%;background:var(--gd)"></i>' : '') + '</button>'; }).join('') +
     '<button class="tile out" id="mout"><span class="ti">' + I('out') + '</span>خروج</button></div><p class="muted" style="text-align:center;margin:14px 0 0">' + esc(dName_(S.me)) + ' · ' + dayLabel(S.me.today, true) + '</p>');
@@ -712,11 +719,10 @@ function vSys() {
       return '<div class="row"><span class="av">' + I(u.ic, 20) + '</span><div class="rx" style="flex:1"><b>' + esc(u.name) + '</b><small>' + esc(u.job) + '</small><small>يشوف: ' + esc(u.see) + '</small></div>' +
         '<div style="text-align:left;white-space:nowrap"><small class="muted" style="display:block;font-size:12px">آخر دخول</small><b style="font-size:13.5px">' + (last ? dayLabel(last.at) + ' · ' + esc(last.at.slice(11)) : '—') + '</b><small class="muted" style="display:block;font-size:12px">' + n + ' عملية هالأسبوع</small></div></div>';
     }).join('');
-    var later = '<div class="dec"><div style="flex:1"><small>قريباً</small><b>مكتبة القوالب، والنسخ الاحتياطي، وإضافة مستخدمين جدد بصلاحيات مخصصة</b></div></div>';
-    $('view').innerHTML = ph('النظام', 'للمالك فقط · عرض فقط، أي تعديل يتم من الإعدادات') + bento + later +
+    $('view').innerHTML = ph('النظام', 'للمالك فقط · الصلاحيات وحالة التشغيل والسجل') + bento +
       '<div class="cols"><div><div class="card"><div class="sec-h"><h2>المستخدمين والصلاحيات</h2><button class="lnk" data-go="set">تعيين الرموز</button></div>' + users +
-      '<p class="muted" style="margin:12px 0 0;font-size:12.5px">الدخول برمز من ٤ أرقام مشفّر · ٥ محاولات خاطئة تقفل ١٥ دقيقة · ١٠ في اليوم تقفل ٢٤ ساعة وتوصلك تنبيه.</p></div></div>' +
-      '<div><div class="card"><div class="sec-h"><h2>السجل</h2></div><div class="chips" role="tablist" aria-label="تصفية السجل">' +
+      '<p class="muted" style="margin:12px 0 0;font-size:12.5px">الدخول برمز من ٤ أرقام مشفّر · ٥ محاولات خاطئة تقفل ١٥ دقيقة · ١٠ في اليوم تقفل ٢٤ ساعة وتوصلك تنبيه.</p></div>' + '<div class="card" id="pmc">' + skel() + '</div></div>' +
+      '<div><div class="card" id="hlc">' + skel() + '</div><div class="card"><div class="sec-h"><h2>السجل</h2></div><div class="chips" role="tablist" aria-label="تصفية السجل">' +
       [['ops', 'العمليات'], ['man', 'التعديلات اليدوية'], ['in', 'الدخول'], ['all', 'الكل']].map(function (o) { return '<button type="button" role="tab" aria-selected="' + (S.lf === o[0]) + '" class="' + (S.lf === o[0] ? 'on' : '') + '" data-lf="' + o[0] + '">' + o[1] + '</button>'; }).join('') +
       '</div><div id="lgl"></div></div></div></div>';
     var rows = lg.filter(function (r) { return S.lf === 'all' || lgKind_(r) === S.lf; }).slice(0, 100), day = '', h = '';
@@ -726,6 +732,7 @@ function vSys() {
       h += '<div class="row"><div class="rx" style="flex:1"><b' + (m ? ' style="color:var(--r)"' : '') + '>' + esc(r.act) + (r.det ? ' <span style="font-weight:500">— ' + esc(r.det) + '</span>' : '') + '</b><small>' + esc(r.user) + (m ? ' · تعديل مباشر في ملف البيانات من خارج النظام' : '') + '</small></div><div class="muted" style="font-size:12.5px;white-space:nowrap">' + esc(r.at.slice(11)) + '</div></div>';
     });
     $('lgl').innerHTML = h || empty('check', 'ما فيه شي في هذي القائمة');
+    sysHealth_(); sysPerms_();
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-lf]'), function (b) { b.onclick = function () { S.lf = b.dataset.lf; vSys(); }; });
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-go]'), function (b) { b.onclick = function () { go(b.dataset.go); }; });
   }).catch(fail);
@@ -1477,22 +1484,101 @@ function vRec() {
 }
 
 // ===== الإعدادات =====
+var SET_GRP = [['التواصل', ['إيميل المالك', 'إيميل المحاسب', 'واتساب المالك']], ['التنبيهات', ['مفتاح تنبيهات الواتساب']], ['الرواتب والدوام', ['نسبة عمولة المناديب', 'ساعات الدوام اليومي', 'سقف تنبيه الأوفر تايم', 'رصيد الإجازة السنوي']], ['المحاسبة في أونكس', ['حساب مصروف الرواتب', 'حساب الرواتب المستحقة']]];
+var SET_PCT = ['نسبة عمولة المناديب'];
+function setField_(x) {
+  var k = x.k, pct = SET_PCT.indexOf(k) >= 0, v = x.v;
+  if (x.secret) return '<label>' + esc(k) + '</label><input data-k="' + esc(k) + '" type="password" autocomplete="new-password" placeholder="' + (x.set ? 'محفوظ ومخفي — اكتب مفتاح جديد لو تبي تغيّره' : 'ما فيه مفتاح محفوظ') + '" value="">' + '<small class="muted" style="display:block;font-size:12px;margin-top:4px">' + (x.set ? '✓ فيه مفتاح محفوظ. ما ينعرض لأي أحد، ولا ينكتب في السجل.' : 'بدون مفتاح ما توصل تنبيهات الواتساب.') + '</small>';
+  if (pct) return '<label>' + esc(k) + '</label><div style="display:flex;align-items:center;gap:8px"><input data-k="' + esc(k) + '" data-pct="1" inputmode="decimal" value="' + esc(v === '' ? '' : Math.round(Number(v) * 10000) / 100) + '" style="flex:1"><b>٪</b></div>';
+  var mode = /إيميل/.test(k) ? 'email' : (/واتساب/.test(k) ? 'tel' : (/حساب/.test(k) ? 'numeric' : 'decimal'));
+  return '<label>' + esc(k) + '</label><input data-k="' + esc(k) + '" inputmode="' + mode + '" value="' + esc(v) + '"' + (mode === 'tel' ? ' placeholder="9665xxxxxxxx"' : '') + '>';
+}
+function setCheck_(o) {
+  var bad = [];
+  Object.keys(o).forEach(function (k) {
+    var v = String(o[k]).trim(); if (v === '') return;
+    if (/إيميل/.test(k) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) bad.push(k + ': الإيميل مو صحيح');
+    else if (/واتساب المالك/.test(k) && !/^9665\d{8}$/.test(v)) bad.push(k + ': لازم يبدأ بـ 9665 و12 رقم');
+    else if (SET_PCT.indexOf(k) >= 0) { var n = Number(v); if (!(n >= 0 && n <= 100)) bad.push(k + ': نسبة بين 0 و100'); else o[k] = String(Math.round(n * 100) / 10000); }
+    else if (/ساعات|سقف|رصيد/.test(k) && !(Number(v) >= 0)) bad.push(k + ': لازم رقم');
+  });
+  return bad;
+}
 function vSet() {
-  Promise.all([call('getSettings', S.t)]).then(function (res) {
-    var st = res[0];
-    $('view').innerHTML = ph('الإعدادات') + '<div class="cols"><div><div class="card"><h2>الإعدادات</h2>' + st.map(function (x, i) { return '<label>' + esc(x.k) + '</label><input data-k="' + esc(x.k) + '" value="' + esc(x.v) + '">'; }).join('') + '<p class="muted">النسب تنكتب كسر عشري: 0.03 = 3%، و 0.2 = 20%.</p><button class="btn" id="sb">حفظ الإعدادات</button><div id="sm" class="msg"></div></div>' +
-      '<div class="card"><h2>رموز المستخدمين</h2><label>المستخدم</label><select id="su"><option value="2">2 — أمين المستودع</option><option value="3">3 — المحاسب</option></select><label>الرمز الجديد (4 أرقام)</label><input id="sp" inputmode="numeric" maxlength="4"><button class="btn l" id="spb">تعيين الرمز</button><button class="btn l" id="mypin">تغيير رمزي</button><div id="spm" class="msg"></div></div></div><div>' +
-      '<div class="card"><h2>السجل</h2><p class="muted" style="margin:6px 0 12px">سجل العمليات والدخول والتعديلات اليدوية صار في صفحة النظام.</p><button class="btn l" id="golog">افتح السجل</button></div></div></div>';
+  Promise.all([call('getSettings', S.t), call('morningSettings', S.t).catch(function () { return {none: true}; })]).then(function (res) {
+    var st = res[0], ms = res[1], by = {}; st.forEach(function (x) { by[x.k] = x; });
+    var used = {}, groups = SET_GRP.map(function (g) { var f = g[1].filter(function (k) { return by[k]; }); f.forEach(function (k) { used[k] = 1; }); return f.length ? '<h3 style="margin:16px 0 0">' + g[0] + '</h3>' + f.map(function (k) { return setField_(by[k]); }).join('') : ''; }).join('');
+    var rest = st.filter(function (x) { return !used[x.k]; }); if (rest.length) groups += '<h3 style="margin:16px 0 0">أخرى</h3>' + rest.map(setField_).join('');
+    var mcard = '';
+    if (!ms.none) {
+      var br = ms.branches || {}, tg = (ms.targets || {}).branchWeekly || {};
+      mcard = '<div class="card"><div class="sec-h"><h2>إعدادات الصباح</h2><span class="muted" style="font-size:12px">' + esc(ms.file) + '</span></div><p class="muted" style="margin:4px 0 8px;font-size:12.5px">يقراها القلب الصباحي والتقرير الأسبوعي كل يوم.</p>' +
+        Object.keys(br).map(function (b) { var x = br[b], cl = x.status === 'closed'; return '<div style="border:1px solid var(--ln);border-radius:16px;padding:10px 12px;margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b>' + esc(b) + '</b><label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" data-mb="' + esc(b) + '" ' + (cl ? '' : 'checked') + ' style="width:auto;min-height:0"> مفتوح</label></div><input data-mr="' + esc(b) + '" placeholder="سبب الإغلاق" value="' + esc(x.reason || '') + '" style="margin-top:8px;' + (cl ? '' : 'display:none') + '">' + (tg[b] !== undefined || !cl ? '<label style="margin-top:8px">الهدف الأسبوعي (ر.س)</label><input data-mt="' + esc(b) + '" inputmode="numeric" value="' + esc(tg[b] !== undefined ? tg[b] : '') + '">' : '') + '</div>'; }).join('') +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px"><div><label>حد فرق الكاش (ر.س)</label><input id="mct" inputmode="decimal" value="' + esc(ms.cashThreshold) + '"></div><div><label>حد فرق مدى (ر.س)</label><input id="mmt" inputmode="decimal" value="' + esc(ms.madaThreshold) + '"></div></div>' +
+        '<label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-weight:600"><input type="checkbox" id="mtg" ' + (ms.telegram ? 'checked' : '') + ' style="width:auto;min-height:0"> رسائل تيليجرام شغّالة</label>' +
+        '<button class="btn" id="msb">حفظ إعدادات الصباح</button><div id="msm" class="msg"></div></div>';
+    }
+    $('view').innerHTML = ph('الإعدادات') + '<div class="cols"><div><div class="card"><h2>إعدادات النظام</h2>' + groups + '<button class="btn" id="sb">حفظ الإعدادات</button><div id="sm" class="msg"></div></div>' +
+      '<div class="card"><h2>رموز المستخدمين</h2><label>المستخدم</label><select id="su"><option value="2">2 — أمين المستودع</option><option value="3">3 — المحاسب</option></select><label>الرمز الجديد (4 أرقام)</label><input id="sp" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password"><button class="btn l" id="spb">تعيين الرمز</button><button class="btn l" id="mypin">تغيير رمزي</button><div id="spm" class="msg"></div></div></div><div>' +
+      mcard + '<div class="card"><h2>الصلاحيات والسجل</h2><p class="muted" style="margin:6px 0 12px">الصلاحيات وحالة التشغيل والنسخ الاحتياطي والسجل في صفحة النظام.</p><button class="btn l" id="golog">افتح النظام</button></div></div></div>';
     $('golog').onclick = function () { go('sys'); };
-    $('sb').onclick = function () { var o = {}, b = this; Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (i) { o[i.dataset.k] = i.value; }); busy(b, true); call('saveSettings', S.t, o).then(function (n) { busy(b, false); msg('sm', n ? 'انحفظ (' + n + ' تغيير)' : 'ما فيه تغيير', true); }).catch(function (e) { busy(b, false); msg('sm', e.message); }); };
-    $('spb').onclick = function () { var b = this; busy(b, true); call('resetUserPin', S.t, Number($('su').value), $('sp').value).then(function () { busy(b, false); $('sp').value = ''; msg('spm', 'انحفظ الرمز', true); }).catch(function (e) { busy(b, false); msg('spm', e.message); }); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-mb]'), function (c) { c.onchange = function () { var r = document.querySelector('[data-mr="' + c.dataset.mb + '"]'); if (r) r.style.display = c.checked ? 'none' : ''; }; });
+    $('sb').onclick = function () {
+      var o = {}, b = this; Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (i) { o[i.dataset.k] = i.value; });
+      var bad = setCheck_(o); if (bad.length) return msg('sm', bad.join(' · '));
+      busy(b, true); call('saveSettings', S.t, o).then(function (n) { busy(b, false); msg('sm', n ? 'انحفظ (' + n + ' تغيير)' : 'ما فيه تغيير', true); var sk = document.querySelector('input[type=password][data-k]'); if (sk && sk.value) { sk.value = ''; sk.placeholder = 'محفوظ ومخفي — اكتب مفتاح جديد لو تبي تغيّره'; } }).catch(function (e) { busy(b, false); msg('sm', e.message); });
+    };
+    if ($('msb')) $('msb').onclick = function () {
+      var o = {branches: {}, targets: {branchWeekly: {}}, cashThreshold: $('mct').value, madaThreshold: $('mmt').value, telegram: $('mtg').checked}, b = this, bad = [];
+      Array.prototype.forEach.call(document.querySelectorAll('[data-mb]'), function (c) { var n = c.dataset.mb, r = document.querySelector('[data-mr="' + n + '"]'); o.branches[n] = {status: c.checked ? 'open' : 'closed', reason: r ? r.value : ''}; if (!c.checked && !(r && r.value.trim())) bad.push('اكتب سبب إغلاق ' + n); });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-mt]'), function (i) { if (i.value.trim() !== '') o.targets.branchWeekly[i.dataset.mt] = i.value; });
+      if (bad.length) return msg('msm', bad.join(' · '));
+      busy(b, true); call('saveMorningSettings', S.t, o).then(function (r) { busy(b, false); msg('msm', r.changes ? 'انحفظ (' + r.changes + ' تغيير) — يطبّق من صباح بكرة' : 'ما فيه تغيير', true); }).catch(function (e) { busy(b, false); msg('msm', e.message); });
+    };
+    $('spb').onclick = function () { var b = this; if (!/^\d{4}$/.test($('sp').value)) return msg('spm', 'الرمز 4 أرقام'); busy(b, true); call('resetUserPin', S.t, Number($('su').value), $('sp').value).then(function () { busy(b, false); $('sp').value = ''; msg('spm', 'انحفظ الرمز', true); }).catch(function (e) { busy(b, false); msg('spm', e.message); }); };
     $('mypin').onclick = function () { pinModal(false); };
   }).catch(fail);
+}
+// ===== النظام: حالة التشغيل + الصلاحيات + النسخ الاحتياطي =====
+function hAge_(s) { if (!s) return 1e9; var p = String(s).replace(' ', 'T'); var d = new Date(p + ':00'); return isNaN(d) ? 1e9 : (Date.now() - d.getTime()) / 36e5; }
+function hRow_(ic, t, st, sub) { var col = {g: 'var(--g)', a: 'var(--a)', r: 'var(--r)'}[st] || 'var(--mu)', bg = {g: 'var(--g2)', a: 'var(--a2)', r: 'var(--r2)'}[st] || '#F0ECE3'; return '<div class="row"><span class="av" style="background:' + bg + ';color:' + col + '">' + I(ic, 18) + '</span><div class="rx" style="flex:1;min-width:0"><b>' + t + '</b><small>' + sub + '</small></div><i class="odot ' + st + '" style="width:10px;height:10px"></i></div>'; }
+function sysHealth_() {
+  var box = $('hlc'); if (!box) return;
+  call('healthBoard', S.t).then(function (h) {
+    if (!$('hlc')) return;
+    var m = h.morning || {}, b = h.brief || {}, of = h.offices || {}, tg = h.telegram || {}, at = h.attach || {};
+    var ms = !b.at ? 'r' : (hAge_(b.at) < 26 ? (m.status === 'success' ? 'g' : 'a') : 'r');
+    var rows = hRow_('cal', 'القلب الصباحي', ms, b.at ? 'آخر ملخص ' + esc(b.at) + (m.status ? ' · ' + ({success: 'مكتملة', partial: 'جزئية', failed: 'فشلت'}[m.status] || esc(m.status)) : '') + (m.note ? ' · ' + esc(String(m.note).slice(0, 80)) : '') : 'ما فيه ملخص') +
+      hRow_('office', 'بيانات المكاتب', of.err ? 'r' : (hAge_(of.at) < 26 ? 'g' : 'r'), of.err ? esc(of.err) : (of.at ? 'آخر تحديث ' + esc(of.at) : 'ما وصل ملف')) +
+      hRow_('bell', 'صندوق تيليجرام', tg.err ? 'r' : (!tg.enabled ? 'a' : (hAge_(tg.last) < 26 ? 'g' : 'a')), tg.err ? esc(tg.err) : (tg.enabled ? 'شغّال' : 'موقف') + (tg.last ? ' · آخر رسالة ' + esc(tg.last) : '') + (tg.files !== undefined ? ' · ' + tg.files + ' ملف في الصندوق' : '')) +
+      hRow_('inbox', 'سكربت حفظ المرفقات', at.err ? 'r' : (hAge_(at.last) < 26 ? 'g' : 'a'), at.err ? esc(at.err) : (at.last ? 'آخر مرفق محفوظ ' + esc(at.last) : 'ما انحفظ مرفق آخر ٣ أيام')) +
+      hRow_('doc', 'النسخة الاحتياطية', !h.backup ? 'r' : (hAge_(h.backup) < 24 * 8 ? 'g' : 'a'), h.backup ? 'آخر نسخة ' + esc(h.backup) + (h.backupUrl ? ' · <a class="lnk" target="_blank" rel="noopener" href="' + esc(h.backupUrl) + '">المجلد</a>' : '') : 'ما انأخذت نسخة بعد') +
+      hRow_('sliders', 'آخر عملية في النظام', 'g', h.lastLog ? esc(h.lastLog) : '—');
+    box.innerHTML = '<div class="sec-h"><h2>حالة التشغيل</h2><span class="muted" style="font-size:12px">تحدّث ' + esc(String(h.now).slice(11)) + '</span></div>' + rows + '<button class="btn l" id="bkn" style="margin-top:12px">' + I('doc', 17) + ' نسخة احتياطية الآن</button>';
+    $('bkn').onclick = function () { var bt = this; busy(bt, true); call('backupNow', S.t).then(function (r) { busy(bt, false); toast('انحفظت النسخة — ' + r.files.length + ' ملف'); sysHealth_(); }).catch(function (e) { busy(bt, false); toast('ما انحفظت — ' + e.message); }); };
+  }).catch(function (e) { if ($('hlc')) $('hlc').innerHTML = '<div class="sec-h"><h2>حالة التشغيل</h2></div>' + empty('alert', 'تعذّر الفحص', esc(e.message)); });
+}
+function sysPerms_() {
+  var box = $('pmc'); if (!box) return;
+  call('getPerms', S.t).then(function (d) {
+    if (!$('pmc')) return;
+    var secs = ['dash', 'credit', 'vlist', 'vnew', 'pay', 'rec', 'emps', 'req', 'leave'], roles = [['acc', 'المحاسب'], ['store', 'أمين المستودع']];
+    var cell = function (r, s) { if ((d.allow[r] || []).indexOf(s) < 0) return '<td style="text-align:center"><span class="muted">—</span></td>'; return '<td style="text-align:center"><input type="checkbox" data-pr="' + r + '" data-ps="' + s + '" ' + ((d.perms[r] || []).indexOf(s) >= 0 ? 'checked' : '') + ' style="width:20px;height:20px;min-height:0;accent-color:var(--n)" aria-label="' + esc(d.names[s]) + '"></td>'; };
+    box.innerHTML = '<div class="sec-h"><h2>الصلاحيات</h2></div><p class="muted" style="margin:2px 0 10px;font-size:12.5px">مين يشوف أي قسم. المالك يشوف كل شي دائماً، والاعتماد له بس. التغيير يطبّق من دخولهم الجاي.</p>' +
+      '<div class="scroll"><table><tr><th>القسم</th><th style="text-align:center">المالك</th>' + roles.map(function (r) { return '<th style="text-align:center">' + r[1] + '</th>'; }).join('') + '</tr>' +
+      secs.map(function (s) { return '<tr><td>' + esc(d.names[s]) + '</td><td style="text-align:center;color:var(--g)">✓</td>' + roles.map(function (r) { return cell(r[0], s); }).join('') + '</tr>'; }).join('') + '</table></div>' +
+      '<p class="muted" style="font-size:12px;margin:8px 0 0">«—» = القسم ما يناسب هالدور من الأساس (مثل المسير لأمين المستودع).</p><button class="btn" id="pms">حفظ الصلاحيات</button><div id="pmm" class="msg"></div>';
+    $('pms').onclick = function () {
+      var o = {acc: [], store: []}, bt = this;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-pr]'), function (c) { if (c.checked) o[c.dataset.pr].push(c.dataset.ps); });
+      busy(bt, true); call('setPerms', S.t, o).then(function () { busy(bt, false); msg('pmm', 'انحفظت الصلاحيات', true); }).catch(function (e) { busy(bt, false); msg('pmm', e.message); });
+    };
+  }).catch(function (e) { if ($('pmc')) $('pmc').innerHTML = empty('alert', 'تعذّر تحميل الصلاحيات', esc(e.message)); });
 }
 function vMe() { $('view').innerHTML = ph('رمزي', esc(S.me.name)) + '<div class="card">' + empty('lock', 'رمز الدخول', 'غيّر رمزك متى ما حسيت إن أحد عرفه') + '<button class="btn" id="mp">تغيير الرمز</button><button class="btn l" id="mo">' + I('out', 18) + 'خروج</button></div>'; $('mo').onclick = logout; $('mp').onclick = function () { pinModal(false); }; }
 
 S.t = load();
-if (S.t) start(); else showLogin();
+if (S.t) { var cc = cLoad_(); if (cc) { start(cc.boot); call('boot', S.t).then(function (b) { var pr = JSON.stringify((S.boot || {}).perms || null) !== JSON.stringify(b.perms || null); S.boot = b; S.me = b; S.emps = b.emps; S.months = b.months; if (pr) start(b); }, function () {}); } else start(); } else showLogin();
 </script>
 <div id="prt"></div>
 </body>
