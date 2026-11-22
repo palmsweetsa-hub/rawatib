@@ -586,6 +586,7 @@ function start(pre) {
     if (sn) { sn.onscroll = ovf; window.addEventListener('resize', ovf); setTimeout(ovf, 50); }
     $('out').onclick = logout; if ($('qs')) $('qs').onclick = qSearch_;
     var first = b.role === 'store' ? 'tasks' : (S.side.indexOf('dash') >= 0 ? 'dash' : (S.side[0] || 'me'));
+    try { var qtk = new URLSearchParams(location.search).get('tk'); if (qtk) { first = 'tasks'; S.tkGo = qtk; history.replaceState(null, '', location.pathname); } } catch (e) {}
     go(first); if (b.mustChange) pinModal(true);
     if (first !== 'tasks') setTimeout(function () { tkLoad_().catch(function () {}); }, 900);
     setTimeout(prefetch, 1200);
@@ -855,8 +856,8 @@ function lgKey_(at) { var m = String(at).match(/^(\d{4})-(\d{1,2})-(\d{1,2})\s+(
 function lgKind_(r) { return r.act === 'تعديل يدوي في الملف' ? 'man' : (r.act === 'دخول' || r.act === 'خروج' ? 'in' : 'ops'); }
 var SYS_USERS = [
   {ic: 'lock', name: 'المالك', job: 'صلاحية كاملة · يعتمد ويعيّن الرموز', see: 'كل الأقسام'},
-  {ic: 'scale', name: 'المحاسب', job: 'متابعة ومراجعة · ما يعتمد', see: 'الملخص، الموظفين، السندات، الآجل والتحصيل، الطلبات، الإجازات، المسير، المطابقة'},
-  {ic: 'receipt', name: 'أمين المستودع', job: 'يسجّل سندات الصرف فقط', see: 'سنداته، سند جديد، رمزه'}
+  {ic: 'scale', name: 'المحاسب', job: 'متابعة ومراجعة · ما يعتمد', see: 'الملخص، الموظفين، السندات، الآجل والتحصيل، الطلبات، الإجازات، المسير، المطابقة، ومهامه الخاصة'},
+  {ic: 'receipt', name: 'أمين المستودع', job: 'يسجّل سندات الصرف فقط', see: 'سنداته، سند جديد، رمزه، ومهامه الخاصة'}
 ];
 function vSys() {
   S.lf = S.lf || 'ops';
@@ -1737,7 +1738,7 @@ function sysPerms_() {
     var cell = function (r, s) { if ((d.allow[r] || []).indexOf(s) < 0) return '<td style="text-align:center"><span class="muted">—</span></td>'; return '<td style="text-align:center"><input type="checkbox" data-pr="' + r + '" data-ps="' + s + '" ' + ((d.perms[r] || []).indexOf(s) >= 0 ? 'checked' : '') + ' style="width:20px;height:20px;min-height:0;accent-color:var(--n)" aria-label="' + esc(d.names[s]) + '"></td>'; };
     box.innerHTML = '<div class="sec-h"><h2>الصلاحيات</h2></div><p class="muted" style="margin:2px 0 10px;font-size:12.5px">مين يشوف أي قسم. المالك يشوف كل شي دائماً، والاعتماد له بس. التغيير يطبّق من دخولهم الجاي.</p>' +
       '<div class="scroll"><table><tr><th>القسم</th><th style="text-align:center">المالك</th>' + roles.map(function (r) { return '<th style="text-align:center">' + r[1] + '</th>'; }).join('') + '</tr>' +
-      secs.map(function (s) { return '<tr><td>' + esc(d.names[s]) + '</td><td style="text-align:center;color:var(--g)">✓</td>' + roles.map(function (r) { return cell(r[0], s); }).join('') + '</tr>'; }).join('') + '</table></div>' +
+      secs.map(function (s) { return '<tr><td>' + esc(d.names[s]) + '</td><td style="text-align:center;color:var(--g)">✓</td>' + roles.map(function (r) { return cell(r[0], s); }).join('') + '</tr>'; }).join('') + '<tr><td>المهام<small class="muted" style="display:block;font-size:11.5px">كل واحد يشوف المهام اللي تتحدد له بس — دائماً مفتوحة</small></td><td style="text-align:center;color:var(--g)">✓</td>' + roles.map(function () { return '<td style="text-align:center;color:var(--g)">✓</td>'; }).join('') + '</tr></table></div>' +
       '<p class="muted" style="font-size:12px;margin:8px 0 0">«—» = القسم ما يناسب هالدور من الأساس (مثل المسير لأمين المستودع).</p><button class="btn" id="pms">حفظ الصلاحيات</button><div id="pmm" class="msg"></div>';
     $('pms').onclick = function () {
       var o = {acc: [], store: []}, bt = this;
@@ -1775,7 +1776,7 @@ function tkLoad_(cb) { return call('tasksBoard', S.t).then(function (d) { S.tk =
 function vTasks() {
   S.tkv = S.tkv || (S.me.role === 'owner' ? 'board' : 'mine'); S.tkw = S.tkw || 'all';
   if (S.tk) tkRender_();
-  tkLoad_(function () { if (S.tab === 'tasks') tkRender_(); }).catch(function (e) { if (!S.tk) fail(e); else toast('ما قدرت أحدّث — ' + e.message); });
+  tkLoad_(function () { if (S.tab === 'tasks') tkRender_(); if (S.tkGo) { var g = S.tkGo; S.tkGo = 0; if (tkFind_(g)) tkOpen_(g); else toast('المهمة ما عادت موجودة أو مو لك'); } }).catch(function (e) { if (!S.tk) fail(e); else toast('ما قدرت أحدّث — ' + e.message); });
 }
 // ===== بطاقة الرقم الكبير والعدّاد (مستوحاة من تصميم ٦) =====
 function h6At_(s) { if (!s) return 0; var v = String(s).trim(); if (v.length === 10) v += ' 23:59'; var t = Date.parse(v.replace(' ', 'T') + ':00+03:00'); return isNaN(t) ? 0 : t; }
@@ -1967,7 +1968,7 @@ function tkNew_(pre) {
     '<label for="tktm">الساعة (اختياري)</label><input type="time" id="tktm" value="' + esc(f.time || '') + '">' +
     '<label>الأولوية</label>' + tkPick_(d, 'pri', f.pri, [['urgent', 'عاجل'], ['normal', 'عادي'], ['later', 'يقدر ينتظر']]) +
     '<label>تتكرر؟</label>' + tkPick_(d, 'rep', f.rep, [['once', 'مرة وحدة'], ['daily', 'كل يوم'], ['weekly', 'كل أسبوع']]) +
-    '<div id="tkcap"></div><p class="muted" style="font-size:12.5px;margin:12px 2px 0">تنبيه الإيميل للموظف موقوف حالياً — يشوفها أول ما يدخل. وتقدر تعطي المهمة لكلود بالكلام في المكالمة أو الشات.</p>' +
+    '<div id="tkcap"></div><p class="muted" style="font-size:12.5px;margin:12px 2px 0">يوصله إيميل بالمهمة الجديدة، وقبل الموعد بساعة، ولو تأخرت. وتقدر تعطي المهمة لكلود بالكلام في المكالمة أو الشات.</p>' +
     '<button class="btn" id="tks">أرسل المهمة</button><div id="tkms" class="msg"></div>');
   var steps = (f.steps || []).map(function (s) { return {t: s.t, need: s.need || ''}; });
   tkStepsUi_(d.querySelector('#tkst'), steps);
