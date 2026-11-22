@@ -356,6 +356,22 @@ body[data-tab=tasks] .kpi:nth-child(4){background:#E7F5EC}body[data-tab=tasks] .
 .oh .qa{margin-top:10px;gap:6px}.oh .qbtn{min-height:38px;font-size:13px;padding:0 12px;border-radius:19px}
 }
 .ohi em{white-space:nowrap}
+
+/* بطاقة الرقم الكبير */
+.h6{position:relative;overflow:hidden;border-radius:26px;padding:22px 22px 18px;margin:4px 0 14px;color:#fff;background:radial-gradient(110% 90% at 100% 0%,rgba(110,84,190,.55) 0%,rgba(110,84,190,0) 55%),radial-gradient(90% 80% at 0% 100%,rgba(184,137,43,.35) 0%,rgba(184,137,43,0) 60%),linear-gradient(160deg,#17223D 0%,#0B1225 100%);box-shadow:0 14px 34px rgba(11,18,37,.22)}
+.h6:before{content:'';position:absolute;inset:-40% -10% auto auto;width:70%;height:140%;background:linear-gradient(115deg,rgba(255,255,255,0) 40%,rgba(255,255,255,.07) 50%,rgba(255,255,255,0) 60%);pointer-events:none}
+.h6m{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.h6k{color:#C9B27A;font-size:13px;font-weight:600}
+.h6n{font-size:64px;font-weight:700;line-height:1.05;color:#F2C14E;letter-spacing:-1.5px;margin-top:8px;font-variant-numeric:tabular-nums}
+.h6u{font-size:20px;font-weight:700;margin-top:2px}
+.h6s{margin:8px 0 0;color:#C7CCD8;font-size:13.5px;line-height:1.7}.h6s em{font-style:normal;color:#F2C14E;font-weight:700}.h6s em.r{color:#F8B4B4}
+.h6cd{position:relative;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.h6cl{font-size:12.5px;color:#9AA3B5;min-width:0}.h6cl b{display:block;color:#fff;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.h6cl small{display:block;color:#C9B27A;font-size:12px}
+.h6t{display:flex;align-items:flex-start;gap:5px;direction:ltr;flex:none}
+.h6t>div{text-align:center;min-width:38px}.h6t b{display:block;font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}.h6t i{font-style:normal;font-size:10.5px;color:#9AA3B5}.h6t span{font-size:24px;color:#4B5675;line-height:1}
+.h6cd.late .h6lt{color:#F8B4B4;font-size:16px}
+.h6no{color:#9AA3B5;font-size:13px}
+@media (max-width:420px){.h6n{font-size:56px}.h6t b{font-size:25px}.h6t>div{min-width:32px}.h6m svg{width:72px;height:72px}}
 </style>
 </head>
 <body><style>.side{top:26px!important}</style><div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#B42318;color:#fff;text-align:center;font:700 13px Tahoma,sans-serif;padding:4px">نسخة تجربة — البيانات منسوخة والإرسال موقوف، أي تعديل هنا ما يأثر على النظام الحقيقي</div>
@@ -1260,6 +1276,8 @@ function vEmps(filter) {
     var cnt = function (x) { return x === 'الكل' ? list.length : (x === 'ناقص' ? list.filter(function (e) { var m = eMiss_(e.id); return m && m.length; }).length : list.filter(function (e) { return e.status === x; }).length); };
     var rows = list.filter(function (e) { if (filter === 'ناقص') { var m = eMiss_(e.id); return m && m.length; } return filter === 'الكل' || e.status === filter; });
     $('view').innerHTML = ph('الموظفين', list.length + ' موظف', '<button class="ib" id="addE" aria-label="إضافة موظف">' + I('plus', 20, 2.2) + '</button>') +
+      (function () { var on = list.filter(function (e) { return e.status === 'على رأس العمل'; }), lv = list.filter(function (e) { return e.status === 'إجازة'; }).length, sal = on.reduce(function (a, e) { return a + (Number(e.salary) || 0); }, 0), nw = new Date(), ld = new Date(nw.getFullYear(), nw.getMonth() + 1, 0), iso = ld.getFullYear() + '-' + ('0' + (ld.getMonth() + 1)).slice(-2) + '-' + ('0' + ld.getDate()).slice(-2);
+        return h6_({kick: 'الفريق', num: on.length, unit: 'موظف على رأس العمل', sub: 'رواتبهم <em>' + n2(sal) + '</em> ر.س شهريًا' + (lv ? ' · <em>' + lv + '</em> في إجازة' : ''), cdTo: h6At_(iso), cdLabel: 'باقي على إقفال مسير<b>' + MON_L[ld.getMonth()] + '</b>', cdLate: 'انتهى الشهر'}); })() +
       '<input id="eq" type="search" placeholder="ابحث بالاسم أو الرقم" value="' + esc(q) + '" style="margin-bottom:12px">' +
       '<div class="chips">' + f.map(function (x) { return '<button data-f="' + x + '" class="' + (x === filter ? 'on' : '') + '">' + (x === 'ناقص' ? 'بيانات ناقصة' : x) + ' · ' + cnt(x) + '</button>'; }).join('') + '</div>' +
       '<div class="card" style="padding:4px 16px">' + (rows.length ? rows.map(function (e) {
@@ -1269,6 +1287,7 @@ function vEmps(filter) {
       '<p class="muted" style="padding:0 4px">الرقم جنب كل موظف = الباقي له بعد آخر مسير معتمد. «معلّق» = متأخراته ما انعتمدت.</p>';
     function fq() { var v = S.eq = $('eq').value.trim(); Array.prototype.forEach.call(document.querySelectorAll('.er'), function (r) { r.style.display = !v || r.dataset.q.indexOf(v) >= 0 ? '' : 'none'; }); }
     $('eq').oninput = fq; if (q) fq();
+    h6Go_();
     Array.prototype.forEach.call(document.querySelectorAll('.chips button'), function (b) { b.onclick = function () { vEmps(b.dataset.f); }; });
     Array.prototype.forEach.call(document.querySelectorAll('.row.clk'), function (r) { r.onclick = function () { vEmp(r.dataset.id); }; });
     $('addE').onclick = function () { empForm({}); };
@@ -1744,9 +1763,36 @@ function vTasks() {
   if (S.tk) tkRender_();
   tkLoad_(function () { if (S.tab === 'tasks') tkRender_(); }).catch(function (e) { if (!S.tk) fail(e); else toast('ما قدرت أحدّث — ' + e.message); });
 }
+// ===== بطاقة الرقم الكبير والعدّاد (مستوحاة من تصميم ٦) =====
+function h6At_(s) { if (!s) return 0; var v = String(s).trim(); if (v.length === 10) v += ' 23:59'; var t = Date.parse(v.replace(' ', 'T') + ':00+03:00'); return isNaN(t) ? 0 : t; }
+function h6_(o) {
+  var cd = o.cdTo ? '<div class="h6cd" data-cd="' + o.cdTo + '" data-late="' + esc(o.cdLate || 'فات الموعد') + '"><div class="h6cl">' + o.cdLabel + '</div><div class="h6t">' +
+    [['d', 'يوم'], ['h', 'ساعة'], ['m', 'دقيقة'], ['s', 'ثانية']].map(function (u) { return '<div><b data-u="' + u[0] + '">00</b><i>' + u[1] + '</i></div>'; }).join('<span>:</span>') + '</div></div>'
+    : (o.cdNone ? '<div class="h6cd h6no">' + o.cdNone + '</div>' : '');
+  return '<section class="h6"><div class="h6m"><div><small class="h6k">' + o.kick + '</small><div class="h6n">' + o.num + '</div><div class="h6u">' + o.unit + '</div>' +
+    (o.sub ? '<p class="h6s">' + o.sub + '</p>' : '') + '</div>' + (o.side || '') + '</div>' + cd + '</section>';
+}
+function h6Tick_() {
+  var els = document.querySelectorAll('.h6cd[data-cd]');
+  if (!els.length) { clearInterval(S.h6i); S.h6i = 0; return; }
+  Array.prototype.forEach.call(els, function (el) {
+    var left = Number(el.dataset.cd) - Date.now();
+    if (left <= 0) { el.classList.add('late'); el.querySelector('.h6t').innerHTML = '<b class="h6lt">' + esc(el.dataset.late) + '</b>'; el.removeAttribute('data-cd'); return; }
+    var s = Math.floor(left / 1000), v = {d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60};
+    Array.prototype.forEach.call(el.querySelectorAll('[data-u]'), function (b) { var x = String(v[b.dataset.u]); b.textContent = x.length < 2 ? '0' + x : x; });
+    var dd = el.querySelector('[data-u="d"]'); if (dd) { dd.parentNode.style.display = v.d ? '' : 'none'; if (dd.parentNode.nextSibling) dd.parentNode.nextSibling.style.display = v.d ? '' : 'none'; }
+  });
+}
+function h6Go_() { h6Tick_(); if (!S.h6i) S.h6i = setInterval(h6Tick_, 1000); }
+function tkNext_(list) {
+  var n = Date.now(), best = null;
+  list.forEach(function (x) { var t = h6At_(x.due); if (t > n && (!best || t < best.t)) best = {t: t, x: x}; });
+  return best;
+}
 function tkRender_() {
   var d = S.tk; if (!d || !$('view')) return;
   if (d.role === 'owner') tkOwner_(d); else tkMine_(d);
+  h6Go_();
   Array.prototype.forEach.call(document.querySelectorAll('#view [data-tk]'), function (b) { b.onclick = function () { tkOpen_(b.dataset.tk); }; });
 }
 function tkCard_(x, own) {
@@ -1762,9 +1808,12 @@ function tkCard_(x, own) {
 function tkOwner_(d) {
   var T = d.tasks, late = T.filter(function (x) { return x.late; }), wait = T.filter(function (x) { return x.state === 'wait'; }), open = T.filter(tkOpenSt_);
   var weekDone = T.filter(function (x) { return x.state === 'done' && x.confAt && x.confAt.slice(0, 10) >= tkAdd_(d.today, -6); });
+  var nx = tkNext_(open.filter(function (x) { return !x.late; }));
   var seg = '<div class="seg" role="tablist" style="margin-bottom:12px;flex-wrap:nowrap;gap:6px">' + [['board', 'اللوحة'], ['wait', 'تأكيداتك' + (wait.length ? ' (' + wait.length + ')' : '')], ['tpl', 'القوالب'], ['week', 'الأسبوع']].map(function (o) { return '<button type="button" role="tab" aria-selected="' + (S.tkv === o[0]) + '" class="' + (S.tkv === o[0] ? 'on' : '') + '" data-tkv="' + o[0] + '" style="min-width:0;padding:8px 4px;font-size:13.5px">' + o[1] + '</button>'; }).join('') + '</div>';
   var h = ph('المهام', dayLabel(d.today, true), '<button class="btn gd" id="tkn" style="margin:0;width:auto;min-height:44px;padding:0 18px">' + I('plus', 18, 2.3) + 'مهمة جديدة</button>') +
-    '<div class="kpis"><div class="kpi' + (late.length ? ' w' : '') + '"><small>متأخرة</small><b>' + late.length + '</b></div><div class="kpi"><small>تنتظر تأكيدك</small><b style="color:var(--a)">' + wait.length + '</b></div><div class="kpi"><small>مفتوحة</small><b>' + open.length + '</b></div><div class="kpi ok"><small>انقفلت هالأسبوع</small><b>' + weekDone.length + '</b></div></div>' + seg;
+    h6_({kick: 'كل المهام المفتوحة', num: open.length, unit: open.length === 1 ? 'مهمة مفتوحة' : 'مهام مفتوحة',
+      sub: (late.length ? '<em class="r">' + late.length + ' متأخرة</em>' : 'ما فيه متأخر') + ' · <em>' + wait.length + '</em> تنتظر تأكيدك · <em>' + weekDone.length + '</em> انقفلت هالأسبوع',
+      cdTo: nx ? nx.t : 0, cdLabel: nx ? 'أقرب موعد<b>' + esc(nx.x.title) + '</b><small>' + esc(nx.x.whoName) + '</small>' : '', cdLate: 'حان الموعد', cdNone: 'ما فيه مواعيد قادمة'}) + seg;
   if (S.tkv === 'board') {
     var who = S.tkw, vis = T.filter(function (x) { return who === 'all' || x.who === who; });
     h += '<div class="chips" role="tablist">' + [['all', 'الكل', T.length]].concat(['store', 'acc', 'claude', 'owner'].map(function (w) { return [w, w === 'owner' ? 'أنا' : TK_WHO[w][0], T.filter(function (x) { return x.who === w && x.state !== 'done'; }).length]; })).map(function (o) { return '<button type="button" role="tab" aria-selected="' + (who === o[0]) + '" class="' + (who === o[0] ? 'on' : '') + '" data-tkw="' + o[0] + '">' + o[1] + ' · ' + o[2] + '</button>'; }).join('') + '</div>';
@@ -1800,8 +1849,10 @@ function tkMine_(d) {
   var now = open.filter(function (x) { return String(x.due).slice(0, 10) <= today; }), later = open.filter(function (x) { return String(x.due).slice(0, 10) > today; });
   var doneToday = T.filter(function (x) { return (x.state === 'wait' || x.state === 'done') && String(x.doneAt).slice(0, 10) === today; });
   var tot = now.length + doneToday.length, pct = tot ? Math.round(doneToday.length / tot * 100) : 100, C = 213.6, late = open.filter(function (x) { return x.late; });
-  var h = '<div class="tkhero"><div><small>' + dayLabel(today, true) + ' · ' + esc(d.me) + '</small><h1>يومي</h1><span>' + (tot ? 'خلصت ' + doneToday.length + ' من ' + tot + (now.length ? ' — باقي لك ' + now.length : ' — خلصت كل شي') : 'ما عندك مهام اليوم') + '</span></div>' +
-    '<svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="التقدّم ' + pct + '٪"><circle cx="42" cy="42" r="34" fill="none" stroke="#1D3156" stroke-width="10"/><circle cx="42" cy="42" r="34" fill="none" stroke="#B8892B" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + (C * pct / 100).toFixed(1) + ' ' + C + '" transform="rotate(-90 42 42)"/><text x="42" y="49" text-anchor="middle" font-size="19" font-weight="800" fill="#fff">' + pct + '٪</text></svg></div>';
+  var nx = tkNext_(open.filter(function (x) { return !x.late; })), ring = '<svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="التقدّم ' + pct + '٪"><circle cx="42" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/><circle cx="42" cy="42" r="34" fill="none" stroke="#F2C14E" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + (C * pct / 100).toFixed(1) + ' ' + C + '" transform="rotate(-90 42 42)"/><text x="42" y="49" text-anchor="middle" font-size="19" font-weight="800" fill="#fff">' + pct + '٪</text></svg>';
+  var h = h6_({kick: 'يومي · ' + dayLabel(today, true), num: now.length, unit: now.length ? (now.length === 1 ? 'مهمة باقية لك اليوم' : 'مهام باقية لك اليوم') : 'خلصت كل مهام اليوم',
+    sub: tot ? 'خلصت <em>' + doneToday.length + '</em> من ' + tot + (late.length ? ' · <em class="r">' + late.length + ' متأخرة</em>' : '') : 'ما عندك مهام اليوم', side: ring,
+    cdTo: nx ? nx.t : 0, cdLabel: nx ? 'باقي على<b>' + esc(nx.x.title) + '</b>' : '', cdLate: 'حان الموعد', cdNone: later.length ? '' : 'ما فيه مواعيد قادمة'});
   if (late.length) h += '<div class="tkwarn" role="status">' + I('alert', 20) + '<span>' + (late.length === 1 ? 'عندك مهمة متأخرة' : 'عندك ' + late.length + ' مهام متأخرة') + ' — لو ما انقفلت تنرفع للمالك في ملخص الصباح</span></div>';
   h += '<h3>مرتبة حسب الأهم</h3>' + (now.length ? now.map(function (x, i) { return '<div class="tkrank"><i' + (x.late ? ' class="r"' : '') + '>' + (i + 1) + '</i>' + tkCard_(x, false) + '</div>'; }).join('') : '<div class="card">' + empty('check', 'ما عليك شي لليوم', 'أي مهمة جديدة توصلك تطلع هنا.') + '</div>');
   if (later.length) h += '<h3>القادمة</h3>' + later.map(function (x) { return tkCard_(x, false); }).join('');
