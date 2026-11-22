@@ -267,6 +267,19 @@ function call(fn) {
     });
 }
 var C = {};
+(function () {
+  var sent = 0, seen = {};
+  function rep(m, src, line) {
+    try {
+      m = String(m || '').slice(0, 200);
+      if (!m || sent >= 5 || seen[m] || /^Script error\.?$/.test(m) || /ResizeObserver|انتهت الجلسة|ما فيه اتصال/.test(m)) return;
+      seen[m] = 1; sent++;
+      fetch(API_URL, {method: 'POST', credentials: 'omit', redirect: 'follow', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({fn: 'clientErr', args: [S.t || null, {m: m, src: String(src || '').split('/').pop(), line: line || '', tab: S.tab || '', ua: (navigator.userAgent.match(/iPhone|iPad|Android|Windows|Macintosh/) || [''])[0]}]})}).catch(function () {});
+    } catch (e) {}
+  }
+  window.addEventListener('error', function (e) { rep(e.message, e.filename, e.lineno); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; rep(r && r.message ? r.message : String(r)); });
+})();
 var WRITES = ['saveVoucher','deleteVoucher','saveRequest','decideRequest','saveLeave','decideLeave','returnToWork','saveEmployee','submitPayroll','decidePayroll','saveJe','reconcile','saveSettings','resetUserPin','setArrears','addPromise','setPromise','addCaseFollow','setPerms','saveMorningSettings','backupNow'];
 function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2500); }
 function swr(key, fn, args, render) {
@@ -1554,6 +1567,10 @@ function sysHealth_() {
       hRow_('inbox', 'سكربت حفظ المرفقات', at.err ? 'r' : (hAge_(at.last) < 26 ? 'g' : 'a'), at.err ? esc(at.err) : (at.last ? 'آخر مرفق محفوظ ' + esc(at.last) : 'ما انحفظ مرفق آخر ٣ أيام')) +
       hRow_('doc', 'النسخة الاحتياطية', !h.backup ? 'r' : (hAge_(h.backup) < 24 * 8 ? 'g' : 'a'), h.backup ? 'آخر نسخة ' + esc(h.backup) + (h.backupUrl ? ' · <a class="lnk" target="_blank" rel="noopener" href="' + esc(h.backupUrl) + '">المجلد</a>' : '') : 'ما انأخذت نسخة بعد') +
       hRow_('sliders', 'آخر عملية في النظام', 'g', h.lastLog ? esc(h.lastLog) : '—');
+    var sf = h.self, sc = !sf ? 'a' : (hAge_(sf.at) > 3 ? 'r' : ({ok: 'g', warn: 'a', fail: 'r'}[sf.status] || 'a'));
+    rows = hRow_('alert', 'الفحص الذاتي (كل ساعة)', sc, !sf ? 'ما اشتغل بعد' : 'آخر فحص ' + esc(sf.at) + (hAge_(sf.at) > 3 ? ' · متوقف من أكثر من ٣ ساعات' : '') + ' · ' + (sf.status === 'ok' ? 'كل شي سليم (' + sf.total + ' فحص)' : (sf.fails ? sf.fails + ' عطل' : '') + (sf.fails && sf.warns ? ' · ' : '') + (sf.warns ? sf.warns + ' تنبيه' : ''))) +
+      ((sf && sf.issues && sf.issues.length) ? '<ul style="margin:2px 0 10px;padding-inline-start:20px;font-size:12.5px;line-height:1.9">' + sf.issues.map(function (x) { return '<li style="color:' + (x.level === 'fail' ? 'var(--r)' : 'var(--a)') + '">' + esc(x.name) + (x.detail ? ' <span class="muted">— ' + esc(x.detail) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '') + rows;
+    if (h.cerr && h.cerr.length) rows += '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">أخطاء الشاشات (' + h.cerr.length + ')</summary><ul style="margin:6px 0;padding-inline-start:20px;font-size:12px;line-height:1.9">' + h.cerr.map(function (x) { return '<li>' + esc(String(x.at).slice(5)) + (x.tab ? ' · ' + esc(x.tab) : '') + (x.u ? ' · ' + esc(x.u) : '') + ' — ' + esc(x.m) + '</li>'; }).join('') + '</ul></details>';
     box.innerHTML = '<div class="sec-h"><h2>حالة التشغيل</h2><span class="muted" style="font-size:12px">تحدّث ' + esc(String(h.now).slice(11)) + '</span></div>' + rows + '<button class="btn l" id="bkn" style="margin-top:12px">' + I('doc', 17) + ' نسخة احتياطية الآن</button>';
     $('bkn').onclick = function () { var bt = this; busy(bt, true); call('backupNow', S.t).then(function (r) { busy(bt, false); toast('انحفظت النسخة — ' + r.files.length + ' ملف'); sysHealth_(); }).catch(function (e) { busy(bt, false); toast('ما انحفظت — ' + e.message); }); };
   }).catch(function (e) { if ($('hlc')) $('hlc').innerHTML = '<div class="sec-h"><h2>حالة التشغيل</h2></div>' + empty('alert', 'تعذّر الفحص', esc(e.message)); });
