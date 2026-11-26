@@ -605,6 +605,9 @@ body[data-tab=tasks] .kpi:nth-child(4){background:#E7F5EC}body[data-tab=tasks] .
 .ccpf{margin:10px 0 0;font-size:13.5px;color:#D6DCE8}.ccpf b{color:#7FD8B6;font-size:15px}.ccpf small{color:#7F8AA3;font-size:11.5px;margin-inline-start:6px}
 .brwk{font-size:12.5px;color:var(--mu);background:#F7F8FA;border-radius:10px;padding:6px 10px;margin:6px 0}.brwk b{color:var(--ink)}.brwk.dn{background:var(--r2);color:var(--r)}.brwk.dn b{color:var(--r)}.brwk.up b{color:var(--g)}
 @media(min-width:1200px){.ccp{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.tag.n{background:#EEF0F3;color:var(--mu)}
+.pxg{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pxh{font-size:13.5px;color:var(--gd3);margin:2px 0 4px}
+@media(max-width:700px){.pxg{grid-template-columns:1fr}}
 </style>
 </head>
 <body><style>.side{top:26px!important}</style><div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#B42318;color:#fff;text-align:center;font:700 13px Tahoma,sans-serif;padding:4px">نسخة تجربة — البيانات منسوخة والإرسال موقوف، أي تعديل هنا ما يأثر على النظام الحقيقي</div>
@@ -1710,7 +1713,7 @@ function vProfit() {
         '<td><b style="color:' + col + '">' + (bad ? '—' : p.margin + '%') + '</b></td><td>' + n2(p.qty) + '</td><td>' + n2(p.price) + '</td><td>' + n2(p.recipeCost) + '<br><small class="muted">أونكس ' + n2(p.onyxCost) + '</small></td>' +
         '<td>' + n2(Math.round(p.sales)) + '</td><td><b>' + (bad ? '—' : n2(Math.round(p.profit))) + '</b></td></tr>';
     }).join('');
-    $('view').innerHTML = ph('ربحية المنتجات', 'آخر 90 يوم حتى ' + dayLabel(d.date, true)) + oxNote_(d) + bento +
+    $('view').innerHTML = ph('ربحية المنتجات', 'آخر 90 يوم حتى ' + dayLabel(d.date, true)) + oxNote_(d) + oxItemsCard_(d) + bento +
       '<div class="card">' + chips + '<input type="search" id="pfq" placeholder="ابحث باسم المنتج أو رمزه" value="' + esc(q) + '" style="margin:0 0 10px">' +
       '<div class="scroll"><table><tr><th>المنتج</th><th>الهامش</th><th>الكمية</th><th>متوسط السعر</th><th>تكلفة الوصفة</th><th>المبيعات</th><th>الربح التقديري</th></tr>' + (rows || '<tr><td colspan="7" class="muted">ما فيه منتجات بهذا الفلتر</td></tr>') + '</table></div>' +
       '<p class="muted" style="font-size:12px;margin:8px 0 0">الهامش = (متوسط سعر البيع − تكلفة الوصفة) ÷ السعر، والتكلفة من وصفات أونكس بأسعار الخامات الحالية. «وصفة غلط» يعني الهامش غير منطقي أو البيع تحت التكلفة بفرق كبير، وغالباً كمية في الوصفة أو وحدة البيع غلط في أونكس. «بدون وصفة» تكلفته من متوسط أونكس، فما يدخل في المتوسط.</p></div>';
@@ -2036,14 +2039,15 @@ document.addEventListener('click', function (e) { var b = e.target && e.target.c
 function vFac() {
   var tab = S.tab, draw = function () {
     var d = C.onyx; if (S.tab !== tab) return; var f = d && !d.none ? d.factory : null;
-    if (!f) { $('view').innerHTML = ph('المصنع', 'من نسخة أونكس الليلية') + '<div class="card">' + empty('doc', 'بيانات المصنع تبدأ من تشغيل الليلة', 'المخزون ومشتريات اليوم تنزل هنا تلقائياً من نسخة أونكس الليلية بعد الساعة ٢ الفجر.') + '</div>'; return; }
+    var ext = d && !d.none ? oxBuyCard_(d) + oxCoverCard_(d) : '';
+    if (!f) { $('view').innerHTML = ph('المصنع', 'من نسخة أونكس الليلية') + (ext || '<div class="card">' + empty('doc', 'بيانات المصنع تبدأ من تشغيل الليلة', 'المخزون ومشتريات اليوم تنزل هنا تلقائياً من نسخة أونكس الليلية بعد الساعة ٢ الفجر.') + '</div>'); return; }
     var bento = '<div class="bento"><div class="bx gold"><small>مشتريات أمس</small><b>' + n2(f.buyTotal) + ' <span>ر.س · ' + f.buyCount + ' فاتورة</span></b></div>' +
       '<div class="bx"><small>أصناف المخزون</small><b>' + n2(f.items) + ' <span>صنف</span></b></div>' +
       '<div class="bx"><small>رصيدها صفر أو سالب</small><b' + (f.zeroCount ? ' style="color:var(--r)"' : '') + '>' + f.zeroCount + ' <span>صنف</span></b></div>' +
       '<div class="bx"><small>قربت تخلص (تحت الحد الأدنى)</small><b' + (f.lowCount ? ' style="color:var(--a)"' : '') + '>' + (f.withMin ? f.lowCount + ' <span>صنف</span>' : '— <span>الحد مو محدد</span>') + '</b></div></div>';
     var hint = f.withMin ? '' : '<div class="hint">الحد الأدنى للأصناف مو محدد في أونكس، فما أقدر أقول وش قرب يخلص. أول ما تحدده في بطاقة الصنف يطلع هنا تلقائياً.</div>';
     var list = function (t, L, cols) { return L.length ? '<div class="card"><div class="sec-h"><h2>' + t + '</h2><span class="muted" style="font-size:12.5px">' + L.length + '</span></div><div class="scroll"><table>' + cols + L.map(function (x) { return '<tr><td>' + esc(x.name || x.supplier) + '</td><td>' + (x.amount !== undefined ? n2(x.amount) : n2(x.qty) + ' ' + esc(x.unit || '')) + '</td><td>' + esc(x.min !== undefined ? n2(x.min) : (x.no || x.code || '')) + '</td></tr>'; }).join('') + '</table></div></div>' : ''; };
-    $('view').innerHTML = ph('المصنع', 'المخزون ومشتريات ' + dayLabel(d.date, true) + ' · من أونكس') + oxNote_(d) + bento + hint +
+    $('view').innerHTML = ph('المصنع', 'المخزون ومشتريات ' + dayLabel(d.date, true) + ' · من أونكس') + oxNote_(d) + bento + ext + (f.withMin ? hint : '') +
       list('مشتريات أمس', f.buys || [], '<tr><th>المورد</th><th>المبلغ</th><th>الفاتورة</th></tr>') + list('رصيدها صفر أو سالب', f.zero || [], '<tr><th>الصنف</th><th>الكمية</th><th>الرمز</th></tr>') + list('قربت تخلص', f.low || [], '<tr><th>الصنف</th><th>الكمية</th><th>الحد الأدنى</th></tr>') +
       '<p class="muted" style="font-size:12px">قراءة فقط من نسخة أونكس الليلية. المرجع النهائي لأي رقم هو أونكس نفسه.</p>';
   };
@@ -2051,6 +2055,33 @@ function vFac() {
   oxGet_().then(draw, function (e) { if (!C.onyx) fail(e); });
 }
 // ===== سلة (البند ٢١): طلبات الجملة والسلات المتروكة — من ملف يحدّثه كلود كل صباح من موصل سلة =====
+// ===== المرحلة ٢: أسعار الشراء، أفضل وأسوأ المنتجات، أيام كفاية المواد، رقابة المستندات (من نسخة أونكس الليلية) =====
+function oxVat_(x) { return x.chg !== null && x.chg !== undefined && x.chg >= 14.5 && x.chg <= 15.5; }
+function oxItemsCard_(d) {
+  var it = (d.items || []).filter(function (x) { return x.y > 0 || x.av >= 50; }); if (!it.length) return '';
+  var top = it.filter(function (x) { return x.y > 0; }).sort(function (a, b) { return b.y - a.y; }).slice(0, 8);
+  var drop = it.filter(function (x) { return x.av >= 80 && x.dn >= 12 && (x.y === 0 || (x.chg !== null && x.chg <= -60)); }).sort(function (a, b) { return b.av - a.av; }).slice(0, 8);
+  var row = function (x, dn) { var p = x.chg; return '<div class="row"><div class="rx" style="flex:1;min-width:0"><b>' + esc(x.name) + '</b><small>متوسطه ' + n2(Math.round(x.av)) + ' باليوم · انباع ' + x.dn + ' يوم من 28</small></div><b>' + n2(Math.round(x.y)) + '</b>' + (dn ? '<span class="tag r" style="max-width:none">' + (x.y ? p + '%' : 'ما انباع') + '</span>' : (p !== null && p !== undefined ? '<span class="tag ' + (p >= 0 ? 'g' : 'a') + '" style="max-width:none">' + (p >= 0 ? '+' : '') + Math.round(p) + '%</span>' : '')) + '</div>'; };
+  return '<div class="card"><div class="sec-h"><h2>أمس · ' + dayLabel(d.date, true) + '</h2><span class="muted" style="font-size:12.5px">فواتير أونكس (المصنع والمناديب)</span></div><div class="pxg"><div><h3 class="pxh">الأكثر مبيعاً</h3>' + top.map(function (x) { return row(x, false); }).join('') + '</div>' +
+    '<div><h3 class="pxh">نازلة عن عادتها</h3>' + (drop.length ? drop.map(function (x) { return row(x, true); }).join('') : '<p class="muted" style="font-size:13px">ما فيه منتج نازل بشكل لافت.</p>') + '</div></div></div>';
+}
+function oxBuyCard_(d) {
+  var L = d.buyPx || []; if (!L.length) return '';
+  var vat = L.filter(oxVat_), up = L.filter(function (x) { return !oxVat_(x) && x.chg >= 3; }), dn = L.filter(function (x) { return x.chg !== null && x.chg <= -3; });
+  var rows = L.slice().sort(function (a, b) { return Math.abs(b.chg || 0) - Math.abs(a.chg || 0); }).map(function (x) { var c = x.chg, cls = c === null || c === undefined ? '' : (oxVat_(x) ? 'a' : (c >= 3 ? 'r' : (c <= -3 ? 'g' : ''))); return '<tr><td>' + esc(x.name) + '<small class="muted" style="display:block">' + esc(x.unit) + ' · ' + esc(x.sup) + '</small></td><td>' + n2(x.px) + '</td><td>' + (x.prev ? n2(x.prev) + '<small class="muted" style="display:block">' + dayLabel(x.prevDate) + '</small>' : '—') + '</td><td>' + (c === null || c === undefined ? '<span class="muted">أول شراء</span>' : '<span class="tag ' + (cls || 'n') + '" style="max-width:none">' + (c > 0 ? '+' : '') + c + '%</span>') + '</td></tr>'; }).join('');
+  return '<div class="card"><div class="sec-h"><h2>أسعار الشراء أمس</h2><span class="muted" style="font-size:12.5px">مقابل آخر شراء لنفس الصنف</span></div>' +
+    (vat.length ? '<div class="hint">' + vat.length + ' صنف في فاتورة ' + esc(vat.map(function (x) { return x.bill; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(' و')) + ' سعره أعلى ١٥٪ بالضبط من آخر شراء. غالباً الفاتورة انسجلت بالأسعار شاملة الضريبة بدون ما تنفصل الضريبة، فتكلفة المواد تطلع أعلى، وضريبة المشتريات ما تنحسب لك. يراجعها المحاسب.</div>' : '') +
+    (up.length ? '<p style="margin:0 0 8px;font-size:13px"><b style="color:var(--r)">ارتفع ' + up.length + ' صنف</b>: ' + up.slice(0, 4).map(function (x) { return esc(x.name) + ' +' + x.chg + '%'; }).join('، ') + '</p>' : '') +
+    '<div class="scroll"><table><tr><th>الصنف</th><th>السعر</th><th>السابق</th><th>التغيّر</th></tr>' + rows + '</table></div></div>';
+}
+function oxCoverCard_(d) {
+  var L = (d.cover || []).filter(function (x) { return x.use > 0; }); if (!L.length) return '';
+  var z = L.filter(function (x) { return x.q <= 0; }), lo = L.filter(function (x) { return x.q > 0 && x.days <= 14; });
+  var row = function (x) { var c = x.q <= 0 ? 'r' : (x.days <= 3 ? 'r' : (x.days <= 7 ? 'a' : 'n')); return '<div class="row"><div class="rx" style="flex:1;min-width:0"><b>' + esc(x.name) + '</b><small>الرصيد ' + n2(x.q) + ' ' + esc(x.unit) + ' · يصرف ' + n2(x.use) + ' باليوم</small></div><span class="tag ' + c + '" style="max-width:none">' + (x.q <= 0 ? 'نفد' : (x.days < 1 ? 'أقل من يوم' : Math.round(x.days) + ' يوم')) + '</span></div>'; };
+  return '<div class="card"><div class="sec-h"><h2>أيام كفاية المواد</h2><span class="muted" style="font-size:12.5px">الرصيد ÷ الاستهلاك من الإنتاج آخر ٣٠ يوم</span></div>' +
+    (lo.length ? lo.slice(0, 14).map(row).join('') : '<p class="muted" style="font-size:13px">كل المواد تكفي أكثر من أسبوعين.</p>') +
+    (z.length ? '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:13px">' + z.length + ' مادة رصيدها صفر وهي تنصرف في الإنتاج ▾</summary><p class="muted" style="font-size:12.5px;margin:6px 0">يعني مشترياتها أو إدخالها ما انسجل في أونكس، فالرصيد والتكلفة فيها غلط.</p>' + z.map(row).join('') + '</details>' : '') + '</div>';
+}
 // ===== تشغيل أونكس (الرقابة): مشاكل تحتاج مراجعة من نسخة أونكس الليلية — قراءة فقط، أي تصحيح يتم في أونكس بموافقة المالك =====
 function oxIssues_() {
   var d = C.onyx; if (!d || d.none) return [];
@@ -2065,8 +2096,17 @@ function oxIssues_() {
   var bad = (d.profit || []).filter(function (p) { return /غير منطقي/.test(p.note || ''); });
   if (bad.length) add('a', pl_(bad.length, 'item').replace('بند', 'منتج').replace('بنود', 'منتجات') + ' هامشها غير منطقي', 'مثل: ' + bad.slice(0, 3).map(function (p) { return p.name; }).join('، ') + '. غالباً الوصفة ناقصة أو وحدة البيع غلط، فالتكلفة والربح فيها مو صحيحة.', 'profit');
   var y = d.day; if (y && y.sales) (y.by || []).filter(function (w) { return w.sales > 0 && w.disc / w.sales >= 0.1; }).forEach(function (w) { add('a', 'خصم ' + Math.round(w.disc / w.sales * 100) + '% في ' + w.name.replace(/^مخزن /, '') + ' أمس', 'خصم ' + n2(w.disc) + ' على مبيعات ' + n2(w.sales) + '. تأكد إنه خصم معتمد.', '', w.disc); });
+  var AU = {}; (d.audit || []).forEach(function (a) { (AU[a.k] = AU[a.k] || []).push(a); });
+  Object.keys(AU).forEach(function (k) { var g = AU[k], sm = g.reduce(function (s, a) { return s + (a.amt || 0); }, 0), lv = g.some(function (a) { return a.lv === 'عاجل'; }) ? 'r' : (g.every(function (a) { return a.lv === 'للعلم'; }) ? 'n' : 'a');
+    var us = {}; g.forEach(function (a) { if (a.user) us[a.user] = (us[a.user] || 0) + 1; });
+    add(lv, k + (g.length > 1 ? ' · ' + g.length : ''), g.slice(0, 6).map(function (a) { return '• ' + a.doc + ' (' + dayLabel(a.date) + (a.amt ? ' · ' + n2(a.amt) : '') + (a.user ? ' · ' + a.user : '') + ')' + (a.det ? ': ' + a.det : ''); }).join('\n') + (g.length > 6 ? '\n… و' + (g.length - 6) + ' غيرها' : '') + '\nآخر ٧ أيام. المستخدمين: ' + Object.keys(us).map(function (u) { return u + ' ' + us[u]; }).join('، '), '', sm); });
+  var vat = (d.buyPx || []).filter(oxVat_); if (vat.length) add('a', 'فاتورة شراء ' + vat[0].bill + ' أسعارها أعلى ١٥٪ بالضبط من آخر شراء', vat.length + ' صنف (مثل ' + vat.slice(0, 3).map(function (x) { return x.name; }).join('، ') + '). غالباً انسجلت بالأسعار شاملة الضريبة بدون فصلها، فترتفع تكلفة المواد وما تنحسب ضريبة المشتريات.', 'fac', vat.reduce(function (s, x) { return s + x.val; }, 0));
+  var pup = (d.buyPx || []).filter(function (x) { return !oxVat_(x) && x.chg >= 5; }); if (pup.length) add('a', 'ارتفاع سعر شراء ' + pl_(pup.length, 'item').replace('بند', 'صنف').replace('بنود', 'أصناف'), pup.slice(0, 5).map(function (x) { return x.name + ' +' + x.chg + '% (' + n2(x.prev) + ' ← ' + n2(x.px) + ') من ' + x.sup; }).join('\n'), 'fac');
+  var cz = (d.cover || []).filter(function (x) { return x.use > 0 && x.q <= 0; }), cl3 = (d.cover || []).filter(function (x) { return x.use > 0 && x.q > 0 && x.days <= 3; });
+  if (cl3.length) add('a', cl3.length + ' مادة تكفي أقل من ٣ أيام', cl3.slice(0, 6).map(function (x) { return x.name + ': ' + (x.days < 1 ? 'أقل من يوم' : Math.round(x.days) + ' يوم'); }).join('\n'), 'fac');
+  if (cz.length) add('a', cz.length + ' مادة رصيدها صفر وهي تنصرف في الإنتاج', 'مثل ' + cz.slice(0, 5).map(function (x) { return x.name; }).join('، ') + '. يعني مشترياتها أو إدخالها ما انسجل في أونكس.', 'fac');
   var fc = d.factory; if (fc && fc.zeroCount) add('a', fc.zeroCount + ' صنف رصيده صفر أو بالسالب', 'الرصيد السالب يعني صرف أو بيع قبل ما يدخل المخزون في النظام (فاتورة شراء أو تحويل ما انسجل).', 'fac');
-  var lv = {r: 0, a: 1}; return L.sort(function (a, b) { return lv[a.lv] - lv[b.lv] || (b.amt || 0) - (a.amt || 0); });
+  var lv = {r: 0, a: 1, n: 2}; return L.sort(function (a, b) { return lv[a.lv] - lv[b.lv] || (b.amt || 0) - (a.amt || 0); });
 }
 function vOxr() {
   var tab = S.tab, draw = function () {
@@ -2077,7 +2117,7 @@ function vOxr() {
       '<div class="bx"><small>مشاكل تحتاج مراجعة</small><b' + (r ? ' style="color:var(--r)"' : '') + '>' + L.length + ' <span>' + (r ? r + ' عاجلة' : 'مشكلة') + '</span></b></div>' +
       (tb ? '<div class="bx"><small>تكلفة المواد · من بداية السنة</small><b>' + tb.matPct + '% <span>من صافي المبيعات</span></b></div><div class="bx"><small>التكلفة الشاملة</small><b>' + tb.allPct + '% <span>الربح التقديري ' + Math.round(100 - tb.allPct) + '%</span></b></div>' : '<div class="bx"><small>نسب التكلفة</small><b>— <span>تبدأ الليلة</span></b></div>') + '</div>';
     var list = '<div class="card"><div class="sec-h"><h2>مشاكل تحتاج مراجعة</h2><span class="muted" style="font-size:12.5px">' + (L.length ? 'اضغط أي مشكلة تشوف التفاصيل' : '') + '</span></div>' + (L.length ? L.map(function (x, i) {
-      return '<div class="bxc' + (x.lv === 'r' ? ' red' : '') + '" style="border:1px solid var(--ln);border-radius:16px;margin:8px 0"><button type="button" class="bxh" data-xo="' + i + '"><span class="tag ' + x.lv + '">' + (x.lv === 'r' ? 'عاجل' : 'راجع') + '</span><span class="bxt"><b>' + esc(x.t) + '</b></span><span class="och">' + I('chev', 16) + '</span></button><div class="bxb" id="xo' + i + '" hidden><p style="margin:12px 0 0;font-size:13.5px;line-height:1.9">' + esc(x.det) + '</p><div class="bxa">' + (x.go ? '<button class="btn l" data-xg="' + i + '">افتح القسم</button>' : '') + '<button class="btn" data-xt="' + i + '">حوّلها مهمة للمحاسب</button></div></div></div>'; }).join('') : empty('check', 'ما فيه مشاكل', 'كل الفحوصات سليمة')) + '<p class="muted" style="font-size:12px;margin:10px 0 0">الفحص قراءة فقط من النسخة الليلية. أي تصحيح يتم في أونكس نفسه وبموافقتك.</p></div>';
+      return '<div class="bxc' + (x.lv === 'r' ? ' red' : '') + '" style="border:1px solid var(--ln);border-radius:16px;margin:8px 0"><button type="button" class="bxh" data-xo="' + i + '"><span class="tag ' + x.lv + '">' + (x.lv === 'r' ? 'عاجل' : (x.lv === 'n' ? 'للعلم' : 'راجع')) + '</span><span class="bxt"><b>' + esc(x.t) + '</b></span><span class="och">' + I('chev', 16) + '</span></button><div class="bxb" id="xo' + i + '" hidden><p style="margin:12px 0 0;font-size:13.5px;line-height:1.9;white-space:pre-line">' + esc(x.det) + '</p><div class="bxa">' + (x.go ? '<button class="btn l" data-xg="' + i + '">افتح القسم</button>' : '') + '<button class="btn" data-xt="' + i + '">حوّلها مهمة للمحاسب</button></div></div></div>'; }).join('') : empty('check', 'ما فيه مشاكل', 'كل الفحوصات سليمة')) + '<p class="muted" style="font-size:12px;margin:10px 0 0">الفحص قراءة فقط من النسخة الليلية. أي تصحيح يتم في أونكس نفسه وبموافقتك.</p></div>';
     var tbc = tb ? '<div class="card"><div class="sec-h"><h2>ميزان المراجعة لين ' + dayLabel(tb.asOf) + '</h2></div><div class="scroll"><table><tr><th>البند</th><th>المبلغ</th><th>من صافي المبيعات</th></tr>' + [['صافي المبيعات', tb.netSales], ['المردودات', tb.returns], ['تكلفة المبيعات (مواد)', tb.cogs], ['تسوية المخزون', tb.adj], ['الرواتب', tb.salaries], ['باقي المصاريف', tb.expenses - tb.salaries]].map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + n2(Math.round(x[1])) + '</td><td>' + (tb.netSales ? Math.round(x[1] / tb.netSales * 1000) / 10 + '%' : '—') + '</td></tr>'; }).join('') + '</table></div></div>' : '';
     var post = (d.posting || []).length ? '<div class="card"><div class="sec-h"><h2>ترحيل الفروع لأونكس</h2></div>' + d.posting.map(function (p) { var ok = p.state === 'محدّث'; return '<div class="row"><div class="rx" style="flex:1"><b>' + esc(p.branch + ' · ' + p.type) + '</b><small>آخر يوم في أونكس ' + dayLabel(p.last) + '</small></div><span class="tag ' + (ok ? 'g' : (/مهد/.test(p.branch) ? 'a' : 'r')) + '" style="max-width:none">' + esc(p.state || '') + '</span></div>'; }).join('') + '</div>' : '';
     $('view').innerHTML = ph('تشغيل أونكس', 'رقابة يومية من نسخة أونكس الليلية · قراءة فقط') + st + list + '<div class="card" id="dox"></div>' + tbc + post;
@@ -2596,6 +2636,8 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
     var hv = c.h || 'متوسطها'; c.tx = r >= 1.6 ? c.n + ' ' + (c.v || 'باعت') + ' أمس <b>' + n2(Math.round(c.y)) + '</b>، يعني <b class="up">' + r.toFixed(1) + ' ضعف</b> ' + hv : (r >= 1.1 ? c.n + ' فوق ' + hv + ' <b class="up">(+' + p + '%)</b>' : (r > 0.9 ? c.n + ' على ' + hv + ' تقريباً <b>(' + (p > 0 ? '+' : '') + p + '%)</b>' : c.n + ' تحت ' + hv + ' <b class="dn">(' + p + '%)</b>')); return c; }).sort(function (a, b) { return b.mag - a.mag; }).map(function (c) { return c.tx; });
   var low = Object.keys(S.tg || {}).map(function (n) { var t = Number(S.tg[n]) || 0, w = D8.slice(1).reduce(function (s, k) { return s + (Number((bh[k] || {})[n]) || 0); }, 0); return t ? {n: n, p: Math.round(w / t * 100)} : null; }).filter(function (x) { return x && x.p < 100; }).sort(function (a, b) { return a.p - b.p; })[0];
   if (low) ins.push('و' + low.n + ' تحت هدف الأسبوع <b class="dn">(' + low.p + '%)</b>');
+  var tp = C.onyx && !C.onyx.none && C.onyx.date === yd ? (C.onyx.items || []).filter(function (x) { return x.y > 0; }).sort(function (a, b) { return b.y - a.y; })[0] : null;
+  if (tp && ins.length) ins.push('وأكثر منتج انباع «' + esc(tp.name) + '» بـ <b>' + n2(Math.round(tp.y)) + '</b>');
   var mon = ch.mon, y0 = +mon.slice(0, 4), mo = +mon.slice(5, 7), dim = new Date(y0, mo, 0).getDate(), el = Math.max(1, +yd.slice(8, 10)), proj = Math.round(ch.m / el * dim);
   var src = m ? 'الأعمدة والمقارنة: ' + cmpC.map(function (c) { return c.n; }).join(' و') + ' يوم بيوم · المصدر: ملخص صباح ' + dayLabel(m.dateISO) + ' · أونكس · سلة' : 'بانتظار ملخص الصباح';
   var top = (items || []).slice(0, 4), bn = bxCount_();
@@ -2625,7 +2667,8 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   var dl = (((m || {}).brief || {}).delivery || []).filter(function (x) { return x.closed; }), tro = typeof TRK !== 'undefined' ? TRK.obj.length : 0;
   if (can('delivery')) T.push({go: 'delivery', ic: 'bike', n: 'التوصيل', v: DVL.ok ? n2(Math.round(dp)) : '…', u: 'ر.س ربح 7 أيام', sub: DVL.ok ? 'وصلك ' + n2(Math.round(dn7)) + ' من مبيعات ' + n2(Math.round(ds7)) + ' · المواد ' + cp + '%' : '', s: dl.length ? st('r', dl.map(function (x) { return x.platform; }).join(' و') + ' فيه إقفال') : (dvStale && DVD.asOf ? st('n', 'البيانات واقفة على ' + dayLabel(DVD.asOf)) : (tro ? st('a', tro + ' تنتظر موافقتك') : st('g', 'المتاجر شغالة'))), f: DVD.asOf ? 'لقطة لين ' + dayLabel(DVD.asOf) : '', stale: dvStale});
   var fc = C.onyx && !C.onyx.none ? C.onyx.factory : null;
-  if (can('fac')) T.push({go: 'fac', ic: 'doc', n: 'المصنع', v: fc ? n2(Math.round(fc.buyTotal)) : '—', u: fc ? 'ر.س مشتريات أمس' : '', sub: fc ? fc.items + ' صنف في المخزون' : 'المخزون والمشتريات من أونكس', s: !fc ? st('n', 'تبدأ الليلة') : (fc.zeroCount ? st('r', fc.zeroCount + ' صنف رصيده صفر') : (fc.lowCount ? st('a', fc.lowCount + ' صنف قرب يخلص') : st('g', 'المخزون سليم'))), f: fc ? 'أونكس ' + dayLabel(C.onyx.date) : '', stale: !fc});
+  var cv = ox0 ? (ox0.cover || []).filter(function (x) { return x.use > 0 && x.q > 0; }) : [], cv0 = cv[0], bpUp = ox0 ? (ox0.buyPx || []).filter(function (x) { return x.chg !== null && x.chg >= 5; }) : [];
+  if (can('fac')) T.push({go: 'fac', ic: 'doc', n: 'المصنع', v: fc ? n2(Math.round(fc.buyTotal)) : '—', u: fc ? 'ر.س مشتريات أمس' : '', sub: fc ? fc.items + ' صنف في المخزون' : 'المخزون والمشتريات من أونكس', s: cv0 && cv0.days <= 3 ? st('r', cv0.name + ' يكفي ' + (cv0.days < 1 ? 'أقل من يوم' : Math.round(cv0.days) + ' يوم')) : (bpUp.length ? st('a', 'ارتفع سعر ' + bpUp.length + ' صنف') : (!fc ? st('n', 'تبدأ الليلة') : (fc.zeroCount ? st('a', fc.zeroCount + ' صنف رصيده صفر') : st('g', 'المخزون سليم')))), f: fc ? 'أونكس ' + dayLabel(C.onyx.date) : '', stale: !fc});
   var crS = crSum_();
   if (can('credit')) T.push({go: 'credit', ic: 'scale', n: 'الآجل', v: crS ? n2(Math.round(crT)) : '…', u: 'ر.س عند العملاء', sub: C.coll ? C.coll.custs.length + ' عميل آجل' : '', s: !C.coll ? st('n', '…') : (ov ? st('a', ov + ' فوق الحد') : st('g', 'كلهم ضمن الحد')), f: C.coll ? crSrc_(crS).replace(/^المصدر:\s*/, '') : ''});
   if (can('pay')) T.push({go: 'pay', ic: 'cal', n: 'الرواتب', v: n2(Math.round(k.total)), u: 'ر.س باقي للموظفين', sub: paidP + '% صُرف · مسير ' + k.monLabel + ' ' + (d.run ? d.run.state : 'مسودة'), s: k.pending ? st('a', k.pending + ' طلب ينتظر اعتمادك') : (d.run && d.run.state === 'مرفوع' ? st('a', 'المسير ينتظر اعتمادك') : st('g', 'ما فيه معلّق')), f: 'مباشر'});
@@ -2633,7 +2676,7 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   var of = C.offices && !C.offices.none ? C.offices : null;
   if (can('offices')) { var ob = of ? of['اللوحة'] || {} : {}, deps = ob['الأقسام'] || [], oday = of ? of['التاريخ'] || ob['التاريخ'] || '' : '', att = deps.filter(function (x) { return /انتباه/.test(x['الحالة']); }).length, stp = deps.filter(function (x) { return /متوقف/.test(x['الحالة']); }).length;
     T.push({go: 'offices', ic: 'office', n: 'موظفين الذكاء', v: of ? (deps.length - att - stp) : '…', u: of ? 'من ' + deps.length + ' بدون ملاحظات' : '', sub: of ? (att ? att + ' يحتاجون انتباه' : '') + (stp ? (att ? ' · ' : '') + stp + ' متوقف' : '') : '', s: !of ? st('n', C.offices ? 'ما وصل تقرير' : '…') : (oday && oday < td ? st('r', 'تشغيل اليوم ما وصل') : (stp ? st('r', stp + ' متوقف') : (att ? st('a', att + ' يحتاج انتباه') : st('g', 'كلهم شغالين')))), f: oday ? 'تشغيل ' + dayLabel(oday) : ''}); }
-  if (can('oxr')) { var XI = ox0 ? oxIssues_() : null, xr = XI ? XI.filter(function (x) { return x.lv === 'r'; }).length : 0;
+  if (can('oxr')) { var XI = ox0 ? oxIssues_().filter(function (x) { return x.lv !== 'n'; }) : null, xr = XI ? XI.filter(function (x) { return x.lv === 'r'; }).length : 0;
     T.push({go: 'oxr', ic: 'scale', n: 'تشغيل أونكس', v: XI ? XI.length : '…', u: 'مشكلة تحتاج مراجعة', sub: XI && XI.length ? XI[0].t : 'الميزان والصناديق والترحيل', s: !XI ? st('n', '…') : (oxOld_(ox0) ? st('n', 'النسخة قديمة') : (xr ? st('r', xr + ' عاجلة') : (XI.length ? st('a', 'راجعها') : st('g', 'كل الفحوصات سليمة')))), f: ox0 ? 'نسخة ' + dayLabel(ox0.date) : ''}); }
   var LB = {g: 'سليم', a: 'انتبه', r: 'عاجل', n: 'ينتظر بيانات'};
   pb.innerHTML = T.map(function (x) { return '<button type="button" class="ccq ' + x.s.c + (x.stale ? ' old' : '') + '" data-go="' + x.go + '"><span class="ccq-h"><span class="ccq-i">' + I(x.ic, 18, 2) + '</span><b>' + x.n + '</b><span class="ccq-st" title="' + LB[x.s.c] + '"><i></i>' + esc(x.s.t) + '</span></span><span class="ccq-v">' + x.v + '<small>' + x.u + '</small></span><span class="ccq-sub">' + esc(x.sub) + '</span>' + (x.f ? '<span class="ccq-f">' + I('cal', 11) + esc(x.f) + '</span>' : '') + '</button>'; }).join('');
