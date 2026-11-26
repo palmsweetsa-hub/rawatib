@@ -1412,6 +1412,8 @@ function promSet_(r, st) {
 }
 function crRender_() {
   var d = C.coll, g = C.credit; if (!d || !g) return;
+  var ox = C.onyx && !C.onyx.none && C.onyx.customers ? C.onyx : null;
+  if (ox) { var om = {}; ox.customers.forEach(function (c) { om[String(c.no)] = c; }); d.custs.forEach(function (x) { if (x.balSheet === undefined) { x.balSheet = x.bal; x.balAtSheet = x.balAt; } var o = om[String(x.no)]; x.bal = o ? o.bal : 0; x.balAt = ox.date; x.a90p = o ? o.a90p : 0; if (o && o.lastRcpt && (!x.lastPay || o.lastRcpt > x.lastPay)) x.lastPay = o.lastRcpt; }); }
   var sg = {}; g.list.forEach(function (x) { sg[String(x.no)] = x; });
   var tol = 1.1, bal = 0, over = 0, act = 0, actAmt = 0, at = '';
   d.custs.forEach(function (x) { bal += x.bal; if (x.limit && x.bal > x.limit * tol) over++; if (x.balAt > at) at = x.balAt; });
@@ -1421,7 +1423,7 @@ function crRender_() {
     '<button class="bx" data-ct="cust" data-cf2="over"><small>فوق الحد الائتماني</small><b' + (over ? ' style="color:var(--r)"' : '') + '>' + over + ' <span>من ' + d.custs.length + '</span></b></button>' +
     '<button class="bx" data-ct="case"><small>قضايا فعّالة</small><b>' + act + ' <span>· ' + n2(actAmt) + ' ر.س</span></b></button>' +
     '<button class="bx" data-ct="sign"><small>وقّعوا الاتفاقية</small><b>' + d.custs.filter(function (x) { var s = sg[String(x.no)]; return s && s.signed; }).length + ' <span>من ' + d.custs.length + '</span></b></button></div>';
-  var stale = '<div class="dec"><div style="flex:1"><small>تنبيه</small><b>الأرصدة من آخر كشف أونكس بتاريخ ' + (at ? dayLabel(at) : '—') + '، وتتحدّث أول ما يوصل كشف أعمار الديون الجديد على إيميل المصنع.</b></div></div>';
+  var stale = ox ? oxNote_(ox) : '<div class="dec"><div style="flex:1"><small>تنبيه</small><b>الأرصدة من آخر كشف أونكس بتاريخ ' + (at ? dayLabel(at) : '—') + '، وتتحدّث أول ما يوصل كشف أعمار الديون الجديد على إيميل المصنع.</b></div></div>';
   var body = {cust: function () { return crCust_(d, sg); }, 'case': function () { return crCase_(d); }, prom: function () { return crProm_(d); }, sign: function () { return crSign_(g); }, onyx: function () { return crOnyx_(); }}[S.ct]();
   if (S.ct === 'onyx') stale = oxNote_(C.onyx);
   $('view').innerHTML = ph('الآجل والتحصيل', 'يشغّله مراقب المشتريات والتحصيل · أنت تعتمد') + bento + stale + crSeg_() + body;
@@ -1575,7 +1577,7 @@ function vCredit() {
   S.ct = S.ct || 'cust'; S.cf = S.cf || 'all'; S.cf2 = S.cf2 || 'all'; S.cf3 = S.cf3 || 'act';
   var tab = S.tab, had = !!(C.coll && C.credit);
   if (had) crRender_();
-  Promise.all([call('collBoard', S.t), call('creditBoard', S.t)]).then(function (r) { C.coll = r[0]; C.credit = r[1]; if (S.tab === tab) crRender_(); },
+  Promise.all([call('collBoard', S.t), call('creditBoard', S.t), oxGet_().catch(function () { return null; })]).then(function (r) { C.coll = r[0]; C.credit = r[1]; if (S.tab === tab) crRender_(); },
     function (e) { if (had) toast('ما قدرت أحدّث البيانات — ' + e.message); else fail(e); });
 }
 function mdRows_(s) { return String(s || '').split('\n').filter(function (l) { return /^\s*\|/.test(l); }).map(function (l) { return l.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(function (c) { return c.trim(); }); }).slice(1); }
