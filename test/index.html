@@ -2278,7 +2278,7 @@ function dcWho_(d, f, multi) {
     else { f.who = b.dataset.w; Array.prototype.forEach.call(d.querySelectorAll('[data-w]'), function (y) { y.classList.toggle('on', y === b); }); }
   }; });
 }
-function dcWhoUi_(f, multi) { return '<div class="tkwho">' + ['acc', 'store', 'owner'].map(function (w) { var on = multi ? f.who[w] : f.who === w; return '<button type="button" data-w="' + w + '" class="' + (on ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>'; }
+function dcWhoUi_(f, multi) { return '<div class="tkwho">' + ['acc', 'store', 'b1', 'b2', 'owner'].map(function (w) { var on = multi ? f.who[w] : f.who === w; return '<button type="button" data-w="' + w + '" class="' + (on ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>'; }
 function dcTaskM_(x) {
   var today = isoToday_(), f = {who: {acc: true}, pri: 'normal'};
   var d = modal('<h2>حوّله لمهمة</h2><p class="muted" style="margin:-4px 0 6px">' + esc(x.t) + '</p>' +
@@ -3117,7 +3117,7 @@ ICONS.clip = '<path d="M21 12.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.5 3.5 0 0 1
 ICONS.rep = '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>';
 ICONS.eye = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
 ICONS.tasks = '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>';
-var TK_WHO = {store: ['أمين المستودع', 'أ', '#F3E7CF', '#8A6516'], acc: ['المحاسب', 'ح', '#E8EEF9', '#14233F'], claude: ['كلود', 'ك', '#E2EFDA', '#1E6B34'], owner: ['المالك', 'م', '#14233F', '#FFFFFF']};
+var TK_WHO = {store: ['أمين المستودع', 'أ', '#F3E7CF', '#8A6516'], acc: ['المحاسب', 'ح', '#E8EEF9', '#14233F'], b1: ['فرع العزيزية', 'ع', '#FDE7E4', '#B42318'], b2: ['فرع المطار', 'ط', '#E0F2F1', '#0F766E'], claude: ['كلود', 'ك', '#E2EFDA', '#1E6B34'], owner: ['المالك', 'م', '#14233F', '#FFFFFF']};   // الفروع توصلها المهمة على إيميل الفرع (البند ١٧)
 var TK_ST = {new: 'جديدة', prog: 'شغّال عليها', returned: 'رجعت له', wait: 'تنتظر تأكيدك', done: 'مقفلة'};
 function tkAv_(w, s) { var p = TK_WHO[w] || ['؟', '؟', '#EEE', '#333']; s = s || 26; return '<span class="tkav" style="width:' + s + 'px;height:' + s + 'px;background:' + p[2] + ';color:' + p[3] + ';font-size:' + Math.round(s * .48) + 'px">' + p[1] + '</span>'; }
 function tkOpenSt_(x) { return x.state === 'new' || x.state === 'prog' || x.state === 'returned'; }
@@ -3219,7 +3219,7 @@ function tkOwner_(d) {
       cdTo: nx ? nx.t : 0, cdLabel: nx ? 'أقرب موعد<b>' + esc(nx.x.title) + '</b><small>' + esc(nx.x.whoName) + '</small>' : '', cdLate: 'حان الموعد', cdNone: 'ما فيه مواعيد قادمة', mid: h6Bars_(wk, 'المنجز آخر 7 أيام')}) + seg;
   if (S.tkv === 'board') {
     var who = S.tkw, vis = T.filter(function (x) { return who === 'all' || x.who === who; });
-    h += '<div class="chips" role="tablist">' + [['all', 'الكل', T.length]].concat(['store', 'acc', 'claude', 'owner'].map(function (w) { return [w, w === 'owner' ? 'أنا' : TK_WHO[w][0], T.filter(function (x) { return x.who === w && x.state !== 'done'; }).length]; })).map(function (o) { return '<button type="button" role="tab" aria-selected="' + (who === o[0]) + '" class="' + (who === o[0] ? 'on' : '') + '" data-tkw="' + o[0] + '">' + o[1] + ' · ' + o[2] + '</button>'; }).join('') + '</div>';
+    h += '<div class="chips" role="tablist">' + [['all', 'الكل', T.length]].concat(['store', 'acc', 'b1', 'b2', 'claude', 'owner'].map(function (w) { return [w, w === 'owner' ? 'أنا' : TK_WHO[w][0], T.filter(function (x) { return x.who === w && x.state !== 'done'; }).length]; })).map(function (o) { return '<button type="button" role="tab" aria-selected="' + (who === o[0]) + '" class="' + (who === o[0] ? 'on' : '') + '" data-tkw="' + o[0] + '">' + o[1] + ' · ' + o[2] + '</button>'; }).join('') + '</div>';
     var cols = [['جديدة وشغّالين عليها', vis.filter(tkOpenSt_).sort(tkRank_)], ['تنتظر تأكيدك', vis.filter(function (x) { return x.state === 'wait'; })], ['انقفلت آخر 7 أيام', vis.filter(function (x) { return x.state === 'done' && String(x.confAt || x.doneAt).slice(0, 10) >= tkAdd_(d.today, -6); }).reverse()]];
     h += '<div class="tkcols">' + cols.map(function (c) { return '<section class="tkcol"><h2>' + c[0] + ' <span class="st" style="background:#fff;color:var(--n)">' + c[1].length + '</span></h2>' + (c[1].length ? c[1].map(function (x) { return tkCard_(x, true); }).join('') : '<p class="muted" style="font-size:13px;margin:6px 4px">ما فيه شي هنا</p>') + '</section>'; }).join('') + '</div>';
   } else if (S.tkv === 'wait') {
@@ -3339,14 +3339,14 @@ function tkNew_(pre) {
   var tpls = (D.tpls || []).slice(0, 8);
   var d = modal('<h2>مهمة جديدة</h2>' +
     (tpls.length ? '<label>ابدأ من قالب</label><div class="chips">' + tpls.map(function (p) { return '<button type="button" data-tp="' + esc(p.id) + '">' + esc(p.title) + '</button>'; }).join('') + '</div>' : '') +
-    '<label>لمين؟</label><div class="tkwho">' + ['store', 'acc', 'claude', 'owner'].map(function (w) { return '<button type="button" data-w="' + w + '" class="' + (f.who === w ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>' +
+    '<label>لمين؟</label><div class="tkwho">' + ['store', 'acc', 'b1', 'b2', 'claude', 'owner'].map(function (w) { return '<button type="button" data-w="' + w + '" class="' + (f.who === w ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>' +
     '<label for="tkt">وش المطلوب؟</label><input id="tkt" value="' + esc(f.title || '') + '" placeholder="مثال: أرسل كشف أعمار الديون"><label for="tkdt">تفاصيل (اختياري)</label><textarea id="tkdt" rows="2">' + esc(f.det || '') + '</textarea>' +
     '<label>الخطوات والدليل (اختياري)</label><div id="tkst"></div>' +
     '<label>متى؟</label>' + tkPick_(d, 'due', f.due, [['today', 'اليوم'], ['tom', 'بكرة'], ['tom2', 'بعد بكرة'], ['pick', 'تاريخ']]) + '<div id="tkdp" style="display:' + (f.due === 'pick' ? 'block' : 'none') + '"><input type="date" id="tkdd" min="' + today + '" value="' + today + '" aria-label="التاريخ"></div>' +
     '<label for="tktm">الساعة (اختياري)</label><input type="time" id="tktm" value="' + esc(f.time || '') + '">' +
     '<label>الأولوية</label>' + tkPick_(d, 'pri', f.pri, [['urgent', 'عاجل'], ['normal', 'عادي'], ['later', 'يقدر ينتظر']]) +
     '<label>تتكرر؟</label>' + tkPick_(d, 'rep', f.rep, [['once', 'مرة وحدة'], ['daily', 'كل يوم'], ['weekly', 'كل أسبوع']]) +
-    '<div id="tkcap"></div><p class="muted" style="font-size:12.5px;margin:12px 2px 0">يوصله إيميل بالمهمة الجديدة، وقبل الموعد بساعة، ولو تأخرت. وتقدر تعطي المهمة لكلود بالكلام في المكالمة أو الشات.</p>' +
+    '<div id="tkcap"></div><p class="muted" style="font-size:12.5px;margin:12px 2px 0">يوصله إيميل بالمهمة الجديدة، وقبل الموعد بساعة، ولو تأخرت. والفروع توصلها على إيميل الفرع، وأنت تأكد الإنجاز هنا. وتقدر تعطي المهمة لكلود بالكلام في المكالمة أو الشات.</p>' +
     '<button class="btn" id="tks">أرسل المهمة</button><div id="tkms" class="msg"></div>');
   var steps = (f.steps || []).map(function (s) { return {t: s.t, need: s.need || ''}; });
   tkStepsUi_(d.querySelector('#tkst'), steps);
@@ -3366,7 +3366,7 @@ function tkNew_(pre) {
 }
 function tkTpl_() {
   var f = {who: 'store', pri: 'normal', every: 'daily', wd: '0', md: '1'}, steps = [];
-  var d = modal('<h2>قالب جديد</h2><label>لمين؟</label><div class="tkwho">' + ['store', 'acc', 'claude', 'owner'].map(function (w) { return '<button type="button" data-w="' + w + '" class="' + (f.who === w ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>' +
+  var d = modal('<h2>قالب جديد</h2><label>لمين؟</label><div class="tkwho">' + ['store', 'acc', 'b1', 'b2', 'claude', 'owner'].map(function (w) { return '<button type="button" data-w="' + w + '" class="' + (f.who === w ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>' +
     '<label for="tpt">وش المطلوب؟</label><input id="tpt" placeholder="مثال: تقرير الصندوق اليومي"><label for="tpd">تفاصيل (اختياري)</label><textarea id="tpd" rows="2"></textarea><label>الخطوات والدليل</label><div id="tpst"></div>' +
     '<label>يتكرر</label>' + tkPick_(d, 'every', f.every, [['daily', 'كل يوم'], ['weekly', 'كل أسبوع'], ['monthly', 'كل شهر'], ['none', 'وقت الحاجة']]) +
     '<div id="tpwd" style="display:none"><label for="tpw">أي يوم؟</label><select id="tpw">' + DAYS.map(function (x, i) { return '<option value="' + i + '">' + x + '</option>'; }).join('') + '</select></div>' +
