@@ -1143,7 +1143,7 @@ function profCard_() {
   var pr = function (s, n) { return n - s * cp / 100; };
   var tr = keys.map(function (k) { var s = D[k][0], n = D[k][1], p = pr(s, n); return '<tr><td>' + lab(k) + '</td><td>' + n2(Math.round(s)) + '</td><td>' + n2(Math.round(n)) + '<small>' + dvPct_(n, s) + '%</small></td><td><b style="color:' + (p < 0 ? 'var(--r)' : 'var(--g)') + '">' + n2(Math.round(p)) + '</b><small>' + dvPct_(p, s) + '%</small></td></tr>'; }).join('');
   return '<div class="card" id="prc" style="margin-top:16px"><div class="sec-h"><h2>الربح الحقيقي شهريًا</h2><div class="seg dvseg">' + chips + '</div></div>' +
-    '<div class="dvqg" style="margin:8px 0 10px">' + dvKpi_('مبيعات 2026', n2(Math.round(y.s)), 'لين سبتمبر') + dvKpi_('اللي وصلك', n2(Math.round(y.n)), dvPct_(y.n, y.s) + '% من المبيعات', 'var(--g)') + dvKpi_('راح للتطبيق', n2(Math.round(y.s - y.n)), dvPct_(y.s - y.n, y.s) + '% عمولة ورسوم وعروض وضريبة', 'var(--r)') + dvKpi_('صافي الربح التقديري', n2(Math.round(pr(y.s, y.n))), 'بعد تكلفة البضاعة ' + cp + '%' + (S.prC === undefined && costPct_() ? ' (من وصفات أونكس)' : ''), pr(y.s, y.n) < 0 ? 'var(--r)' : 'var(--g)') + '</div>' +
+    '<div class="dvqg" style="margin:8px 0 10px">' + dvKpi_('مبيعات 2026', n2(Math.round(y.s)), 'لين سبتمبر') + dvKpi_('اللي وصلك', n2(Math.round(y.n)), dvPct_(y.n, y.s) + '% من المبيعات', 'var(--g)') + dvKpi_('راح للتطبيق', n2(Math.round(y.s - y.n)), dvPct_(y.s - y.n, y.s) + '% عمولة ورسوم وعروض وضريبة', 'var(--r)') + dvKpi_('صافي الربح التقديري', n2(Math.round(pr(y.s, y.n))), 'بعد تكلفة ' + cp + '%' + (S.prC === undefined && costPct_() ? ' — تكلفة المواد من وصفات أونكس، بدون العمالة والتغليف والإيجار' : ''), pr(y.s, y.n) < 0 ? 'var(--r)' : 'var(--g)') + '</div>' +
     (key !== 'n' ? (function () { var o = rfSum_(ak), l = key === 'k' ? o.ref : o.val; return '<div class="dvin dvr" style="margin-bottom:10px">' + I('alert', 16) + '<div><b>' + (key === 'k' ? 'الاسترداد الفعلي آخر 30 يوم: ' : 'المرتجعات والإلغاءات آخر 30 يوم: ') + n2(Math.round(l)) + ' ريال</b><small>' + (key === 'k' ? 'تعادل ' + dvPct_(l, rfAvgNet_(key)) + '% من متوسط صافي الشهر، و' + o.ours + ' من ' + o.n + ' حالة بسببنا.' : 'قيمة ' + o.n + ' طلب ملغى بسبب «الصنف غير متاح».') + ' التفاصيل في قسم المرتجعات تحت.</small></div></div>'; })() : '') + '<div class="engrow" style="margin-bottom:10px"><label>تكلفة البضاعة % من سعر التطبيق<input type="number" step="1" id="prcp" value="' + cp + '"></label></div>' +
     '<div class="dvtw"><table class="dvtb"><thead><tr><th>الشهر</th><th>المبيعات</th><th>وصلك فعلًا</th><th>صافي الربح</th></tr></thead><tbody>' + tr + '</tbody></table></div>' +
     '<small class="dvsrc" style="margin-top:8px">' + I('doc', 13) + 'المصدر: ' + esc(PROF_SRC[key]) + ' · «وصلك فعلًا» = المبيعات − العمولة والرسوم والعروض علينا وخصم التوصيل والضريبة المقتطعة. الشهور الجاية تنضاف من مطابقة الكشوف.</small></div>';
@@ -1949,7 +1949,7 @@ function brMtd_(mon) { var bd = C.branches; if (!bd) return null; var h = brHist
 function chSales_(m, tl, bf) {
   var ox = C.onyx && !C.onyx.none ? C.onyx : null, day = m ? isoPrev_(m.dateISO) : '', mon = (day || isoToday_()).slice(0, 7), sl = C.salla && !C.salla.none ? C.salla : null;
   var rep = ox && ox.day && ox.day.date === day ? (ox.day.by || []).filter(function (w) { return /مندوب/.test(w.name); }).reduce(function (s, w) { return s + (w.sales || 0) - (w.disc || 0); }, 0) : null;
-  var br = m && !bf.wait ? bf.total : null, sal = m ? Number(tl.sallaValue) || 0 : null;
+  var br = m && !bf.wait ? bf.total : null, sal = sl && sl.yDate === day ? sl.yTotal : (m ? Number(tl.sallaValue) || 0 : null);
   var dvr = DVD.rows.filter(function (r) { return r[0] === day; })[0], dvy = dvr ? dvr[3] + dvr[9] : null;
   var mRep = ox && String(ox.date).slice(0, 7) === mon ? (ox.reps || []).reduce(function (s, r) { return s + (r.salesMonth || 0) - (r.discMonth || 0); }, 0) : null;
   var mBr = brMtd_(mon), mDvR = DVD.rows.filter(function (r) { return String(r[0]).slice(0, 7) === mon; }), mDv = mDvR.length ? mDvR.reduce(function (s, r) { return s + r[3] + r[9]; }, 0) : null;
@@ -1963,7 +1963,7 @@ document.addEventListener('click', function (e) { var b = e.target && e.target.c
 function vFac() {
   var tab = S.tab, draw = function () {
     var d = C.onyx; if (S.tab !== tab) return; var f = d && !d.none ? d.factory : null;
-    if (!f) { $('view').innerHTML = ph('المصنع', 'من نسخة أونكس الليلية') + oxNote_(d) + OX_EMPTY('المخزون والمشتريات تنزل هنا من تشغيل أونكس الليلي.'); return; }
+    if (!f) { $('view').innerHTML = ph('المصنع', 'من نسخة أونكس الليلية') + '<div class="card">' + empty('doc', 'بيانات المصنع تبدأ من تشغيل الليلة', 'المخزون ومشتريات اليوم تنزل هنا تلقائياً من نسخة أونكس الليلية بعد الساعة ٢ الفجر.') + '</div>'; return; }
     var bento = '<div class="bento"><div class="bx gold"><small>مشتريات أمس</small><b>' + n2(f.buyTotal) + ' <span>ر.س · ' + f.buyCount + ' فاتورة</span></b></div>' +
       '<div class="bx"><small>أصناف المخزون</small><b>' + n2(f.items) + ' <span>صنف</span></b></div>' +
       '<div class="bx"><small>رصيدها صفر أو سالب</small><b' + (f.zeroCount ? ' style="color:var(--r)"' : '') + '>' + f.zeroCount + ' <span>صنف</span></b></div>' +
@@ -1983,8 +1983,8 @@ function vSalla() {
     var d = C.salla; if (S.tab !== tab || !d) return;
     if (d.none) { $('view').innerHTML = ph('سلة', 'متجر الجملة') + '<div class="card">' + empty('receipt', 'ما وصل ملف سلة بعد', 'يتحدّث كل صباح من موصل سلة.') + '</div>'; return; }
     var st = function (s) { return '<span class="st" style="background:#EEF0F3;color:var(--ink)">' + esc(s) + '</span>'; };
-    var bento = '<div class="bento"><div class="bx gold"><small>أمس</small><b>' + n2(d.yTotal || 0) + ' <span>ر.س · ' + (d.yCount || 0) + ' طلب</span></b></div>' +
-      '<div class="bx"><small>من بداية الشهر</small><b>' + n2(d.monthTotal || 0) + ' <span>ر.س · ' + (d.monthCount || 0) + ' طلب</span></b></div>' +
+    var bento = '<div class="bento"><div class="bx gold"><small>أمس</small><b>' + n2(d.yTotal || 0) + ' <span>ر.س · ' + pl_(d.yCount || 0, 'req') + '</span></b></div>' +
+      '<div class="bx"><small>من بداية الشهر</small><b>' + n2(d.monthTotal || 0) + ' <span>ر.س · ' + pl_(d.monthCount || 0, 'req') + '</span></b></div>' +
       '<div class="bx"><small>سلات متروكة</small><b' + ((d.carts || []).length ? ' style="color:var(--a)"' : '') + '>' + (d.carts || []).length + ' <span>· ' + n2((d.carts || []).reduce(function (s, c) { return s + (c.total || 0); }, 0)) + ' ر.س</span></b></div>' +
       '<div class="bx"><small>بانتظار التنفيذ</small><b>' + (d.orders || []).filter(function (o) { return !/تم التنفيذ|مكتمل|ملغي|تم التوصيل/.test(o.status); }).length + ' <span>طلب</span></b></div></div>';
     var ord = (d.orders || []).map(function (o) { return '<tr><td>' + esc(o.customer) + '</td><td>' + n2(o.total) + '</td><td>' + st(o.status) + '</td><td>' + dayLabel(o.date) + '</td><td>' + esc(o.pay || '') + '</td></tr>'; }).join('');
@@ -2007,8 +2007,8 @@ var BX_MON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'
 function bxDue_(s) {   // نص المهلة لتاريخ عشان الترتيب: «اليوم»، «بكرة»، «٢٧ نوفمبر ١٩:١٨»، أو تاريخ رقمي
   s = bxDig_(s); var td = isoToday_(); if (!s) return '';
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-  if (/اليوم|عاجل|فوراً|الحين/.test(s)) return td; if (/بكرة|غداً|غدا/.test(s)) return tkAdd_(td, 1);
-  for (var i = 0; i < 12; i++) { var m = s.match(new RegExp('(\\d{1,2})\\s*' + BX_MON[i])); if (m) return td.slice(0, 4) + '-' + ('0' + (i + 1)).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+  for (var i = 0; i < 12; i++) { var m = s.match(new RegExp('(\\d{1,2})\\s*' + BX_MON[i])); if (m) { var y = td.slice(0, 4); if (i + 1 < Number(td.slice(5, 7)) - 6) y = String(Number(y) + 1); return y + '-' + ('0' + (i + 1)).slice(-2) + '-' + ('0' + m[1]).slice(-2); } }
+  if (/^\s*(اليوم|عاجل|فوراً|الحين)/.test(s)) return td; if (/^\s*(بكرة|غداً|غدا)/.test(s)) return tkAdd_(td, 1);
   return '';
 }
 function bxItems_() {
@@ -2408,7 +2408,7 @@ function dDraw_(d, m, cl, tl, crT, items, bf) {
   if (can('branches')) K.push(card('branches', 'store', 'g', 'مبيعات أمس · كل القنوات', ch.yOk ? n2(Math.round(ch.y)) : '…', 'ر.س', '', '', '<span class="dkf dkx">' + esc(ch.yTxt) + '</span>'));
   if (can('branches')) K.push(card('reps', 'chart', 'b', 'من بداية ' + MON_L[Number(ch.mon.slice(5, 7)) - 1] + ' · كل القنوات', ch.mOk ? n2(Math.round(ch.m)) : '…', 'ر.س', '', '', '<span class="dkf dkx">' + esc(ch.mTxt) + '</span>'));
   var ds7 = dv.reduce(function (s, r) { return s + r[3] + r[9]; }, 0), dp = dn7 - ds7 * cp / 100;
-  if (can('delivery')) K.push(card('delivery', 'bike', 'a', 'ربح التوصيل بعد التكلفة · 7 أيام' + (DVD.asOf ? ' لين ' + dayLabel(DVD.asOf) : ''), DVL.ok ? n2(Math.round(dp)) : '…', 'ر.س', DVL.ok ? 'تكلفة البضاعة ' + cp + '%' : '', dp >= 0 ? 'up' : 'dn', '<span class="dkf dkx">وصلك ' + n2(Math.round(dn7)) + ' من مبيعات ' + n2(Math.round(ds7)) + '</span>'));
+  if (can('delivery')) K.push(card('delivery', 'bike', 'a', 'ربح التوصيل بعد التكلفة · 7 أيام' + (DVD.asOf ? ' لين ' + dayLabel(DVD.asOf) : ''), DVL.ok ? n2(Math.round(dp)) : '…', 'ر.س', DVL.ok ? 'تكلفة المواد ' + cp + '%' : '', dp >= 0 ? 'up' : 'dn', '<span class="dkf dkx">وصلك ' + n2(Math.round(dn7)) + ' من مبيعات ' + n2(Math.round(ds7)) + '</span>'));
   var fc = C.onyx && !C.onyx.none ? C.onyx.factory : null;
   if (can('fac')) K.push(card('fac', 'doc', 'b', 'المصنع · مشتريات أمس', fc ? n2(Math.round(fc.buyTotal)) : (C.onyx ? '—' : '…'), fc ? 'ر.س' : '', fc && fc.zeroCount ? fc.zeroCount + ' صنف رصيده صفر' : '', fc && fc.zeroCount ? 'dn' : '', '<span class="dkf dkx">' + (fc ? fc.items + ' صنف في المخزون · ' + pl_(fc.buyCount, 'req').replace('طلب', 'فاتورة') : 'تنزل من تشغيل أونكس الليلي') + '</span>'));
   if (can('credit')) K.push(card('credit', 'scale', 'r', 'أرصدة الآجل', crSum_() ? n2(Math.round(crT)) : '…', 'ر.س', ov ? ov + ' فوق الحد' : '', ov ? 'dn' : '', '<span class="dkf">' + (C.coll ? C.coll.custs.length + ' عميل آجل' : '') + '</span>'));
