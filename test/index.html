@@ -602,6 +602,9 @@ body[data-tab=tasks] .kpi:nth-child(4){background:#E7F5EC}body[data-tab=tasks] .
 #odec{margin:0 0 16px}
 @media(max-width:959px){.ccrow{grid-template-columns:1fr}.cch-bg .cch-v{font-size:40px}.ccsp{height:86px;gap:5px}.ccins{font-size:14px}.cch-a{flex-wrap:wrap}.cch-a .ohi{width:100%;justify-content:center;margin:0}}
 .cch-k{background:none!important;border:0!important;padding:0!important}
+.ccpf{margin:10px 0 0;font-size:13.5px;color:#D6DCE8}.ccpf b{color:#7FD8B6;font-size:15px}.ccpf small{color:#7F8AA3;font-size:11.5px;margin-inline-start:6px}
+.brwk{font-size:12.5px;color:var(--mu);background:#F7F8FA;border-radius:10px;padding:6px 10px;margin:6px 0}.brwk b{color:var(--ink)}.brwk.dn{background:var(--r2);color:var(--r)}.brwk.dn b{color:var(--r)}.brwk.up b{color:var(--g)}
+@media(min-width:1200px){.ccp{grid-template-columns:repeat(5,minmax(0,1fr))}}
 </style>
 </head>
 <body><style>.side{top:26px!important}</style><div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#B42318;color:#fff;text-align:center;font:700 13px Tahoma,sans-serif;padding:4px">نسخة تجربة — البيانات منسوخة والإرسال موقوف، أي تعديل هنا ما يأثر على النظام الحقيقي</div>
@@ -834,7 +837,7 @@ function showLogin(err) {
     call('login', lu, $('lp').value, devGet_(lu)).then(function (r) { wipe_(); if (r.dev) devSet_(r.u, r.dev); S.t = r.token; save(r.token); S.iat = S.seen = Date.now(); start(r.boot); }).catch(function (e) { busy(b, false); msg('lm', e.message); });
   };
 }
-var TAB = {dash: ['الملخص', 'home'], tasks: ['المهام', 'tasks'], branches: ['الفروع', 'store'], credit: ['الآجل والتحصيل', 'card'], reps: ['حسابات المناديب', 'users'], profit: ['ربحية المنتجات', 'chart'], delivery: ['التوصيل', 'bike'], dvt: ['المتابعة والاعتراضات', 'flag'], dvp: ['الأسعار والعروض', 'tag'], dvr: ['الربح والمرتجعات', 'chart'], dvc: ['المنصات والعقود', 'doc'], offices: ['موظفين الذكاء', 'office'], box: ['ينتظرك', 'inbox'], fac: ['المصنع', 'doc'], salla: ['سلة', 'receipt'], sys: ['النظام', 'sliders'], emps: ['الموظفين', 'users'], vlist: ['السندات', 'receipt'], vnew: ['سند جديد', 'plus'], req: ['الطلبات والإجازات', 'doc'], leave: ['الإجازات', 'leave'], pay: ['المسير', 'cal'], rec: ['المطابقة', 'scale'], set: ['الإعدادات', 'gear'], me: ['رمزي', 'lock']};
+var TAB = {dash: ['الملخص', 'home'], tasks: ['المهام', 'tasks'], branches: ['الفروع', 'store'], credit: ['الآجل والتحصيل', 'card'], reps: ['حسابات المناديب', 'users'], profit: ['ربحية المنتجات', 'chart'], delivery: ['التوصيل', 'bike'], dvt: ['المتابعة والاعتراضات', 'flag'], dvp: ['الأسعار والعروض', 'tag'], dvr: ['الربح والمرتجعات', 'chart'], dvc: ['المنصات والعقود', 'doc'], offices: ['موظفين الذكاء', 'office'], box: ['ينتظرك', 'inbox'], fac: ['المصنع', 'doc'], salla: ['سلة', 'receipt'], sys: ['النظام', 'sliders'], oxr: ['تشغيل أونكس', 'scale'], emps: ['الموظفين', 'users'], vlist: ['السندات', 'receipt'], vnew: ['سند جديد', 'plus'], req: ['الطلبات والإجازات', 'doc'], leave: ['الإجازات', 'leave'], pay: ['المسير', 'cal'], rec: ['المطابقة', 'scale'], set: ['الإعدادات', 'gear'], me: ['رمزي', 'lock']};
 function tabName(t) { return t === 'vlist' && S.me && S.me.role === 'store' ? 'سنداتي' : TAB[t][0]; }
 function start(pre) {
   $('app').innerHTML = '<div class="wrap">' + skel() + '</div>';
@@ -842,12 +845,12 @@ function start(pre) {
     S.me = b; S.emps = b.emps; S.months = b.months;
     S.main = b.role === 'store' ? ['tasks', 'vlist'] : ['dash', 'tasks', 'vlist', 'emps'];
     if (b.role === 'owner') S.main = ['dash', 'tasks', 'box', 'branches'];
-    S.more = b.role === 'store' ? ['me'] : (b.role === 'acc' ? ['credit', 'reps', 'profit', 'delivery', 'vlist', 'pay', 'rec', 'req', 'me'] : ['offices', 'fac', 'credit', 'reps', 'profit', 'salla', 'delivery', 'emps', 'vlist', 'pay', 'rec', 'req', 'sys', 'set']);
-    S.side = b.role === 'owner' ? ['dash', 'box', 'tasks', 'branches', 'salla', 'fac', 'offices', 'credit', 'reps', 'profit'].concat(DVK, ['emps', 'vlist', 'pay', 'rec', 'req', 'sys', 'set']) : (b.role === 'acc' ? ['dash', 'tasks', 'credit', 'reps', 'profit'].concat(DVK, ['emps', 'vlist', 'pay', 'rec', 'req', 'me']) : S.main.concat(S.more).concat(DVK));
+    S.more = b.role === 'store' ? ['me'] : (b.role === 'acc' ? ['credit', 'reps', 'profit', 'delivery', 'vlist', 'pay', 'rec', 'req', 'me'] : ['offices', 'fac', 'credit', 'reps', 'profit', 'salla', 'delivery', 'emps', 'vlist', 'pay', 'rec', 'req', 'oxr', 'sys', 'set']);
+    S.side = b.role === 'owner' ? ['dash', 'box', 'tasks', 'branches', 'salla', 'fac', 'offices', 'credit', 'reps', 'profit'].concat(DVK, ['emps', 'vlist', 'pay', 'rec', 'req', 'oxr', 'sys', 'set']) : (b.role === 'acc' ? ['dash', 'tasks', 'credit', 'reps', 'profit'].concat(DVK, ['emps', 'vlist', 'pay', 'rec', 'req', 'me']) : S.main.concat(S.more).concat(DVK));
     S.canNew = b.role !== 'owner';
     if (b.role !== 'owner') { var pm = Array.isArray(b.perms) ? b.perms : [], okT = function (x) { return x === 'me' || x === 'tasks' || pm.indexOf(x) >= 0; }; S.main = S.main.filter(okT); S.more = S.more.filter(okT); S.side = S.side.filter(okT); S.canNew = pm.indexOf('vnew') >= 0; }
     S.boot = b;
-    S.grp = b.role === 'store' ? {} : {dash: 'اليوم', credit: 'المال والتحصيل', emps: 'الفريق والرواتب', sys: 'الإدارة', me: 'حسابي'};
+    S.grp = b.role === 'store' ? {} : {dash: 'اليوم', credit: 'المال والتحصيل', emps: 'الفريق والرواتب', oxr: 'الرقابة', sys: 'الإدارة', me: 'حسابي'};
     var dv1 = S.side.filter(function (x) { return DVK.indexOf(x) >= 0; })[0]; if (dv1) S.grp[dv1] = 'إدارة برامج التوصيل';
     if (b.role === 'store') { var fdv = S.more.indexOf('me'); if (dv1 && S.more.indexOf(dv1) < 0) S.more.splice(fdv < 0 ? S.more.length : fdv, 0, dv1); }
     else { S.more = S.more.filter(function (x) { return DVK.indexOf(x) < 0; }); if (dv1) S.more.splice(Math.max(0, S.more.indexOf('pay')), 0, dv1); }
@@ -929,7 +932,7 @@ function go(t, arg) {
   S.tab = t; document.body.dataset.tab = t; markNav();
   $('view').innerHTML = skel();
   if (DVK.indexOf(t) >= 0 && !DVL.ok) { dvLoad_().then(function (ok) { if (ok && S.tab === t) go(t, arg); }, function (e) { if (S.tab === t) fail(e); }); return; }
-  ({box: vBox, fac: vFac, salla: vSalla, tasks: vTasks, branches: vBranches, credit: vCredit, reps: vReps, profit: vProfit, delivery: vDelivery, dvt: vDvT, dvp: vDvP, dvr: vDvR, dvc: vDvC, offices: vOffices, sys: vSys, dash: vDash, emps: vEmps, vnew: vNew, vlist: vList, req: vReqL_, leave: vLeave, pay: vPay, rec: vRec, set: vSet, me: vMe})[t](arg);
+  ({box: vBox, fac: vFac, salla: vSalla, oxr: vOxr, tasks: vTasks, branches: vBranches, credit: vCredit, reps: vReps, profit: vProfit, delivery: vDelivery, dvt: vDvT, dvp: vDvP, dvr: vDvR, dvc: vDvC, offices: vOffices, sys: vSys, dash: vDash, emps: vEmps, vnew: vNew, vlist: vList, req: vReqL_, leave: vLeave, pay: vPay, rec: vRec, set: vSet, me: vMe})[t](arg);
   window.scrollTo(0, 0);
 }
 function fail(e) { $('view').innerHTML = '<div class="card">' + empty('alert', 'ما قدرت أجيب البيانات', esc(e.message)).replace('class="empty"', 'class="empty err"') + '<button class="btn l" onclick="go(S.tab)">إعادة المحاولة</button></div>'; }
@@ -1669,7 +1672,7 @@ function vReps() {
       var line = function (l, v, st, sub) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #EEF0F3"><span class="muted">' + l + (sub ? '<small style="display:block;font-size:11.5px">' + sub + '</small>' : '') + '</span><b' + (st ? ' style="' + st + '"' : '') + '>' + v + '</b></div>'; };
       return (idle && ri === act ? '<div style="grid-column:1/-1;font-size:13px;font-weight:700;color:var(--mu);margin-top:6px">بدون مبيعات هذا الشهر · ' + idle + '</div>' : '') + '<div class="card"' + (ri >= act ? ' style="opacity:.75"' : '') + '><div class="row" style="border:0;padding:0 0 8px"><span class="av">' + ini(r.name.replace(/^المندوب\s*/, '')) + '</span><div class="rx" style="flex:1"><b>' + esc(r.name) + '</b><small>رمز ' + esc(r.code) + (r.lastBox ? ' · آخر حركة صندوق ' + dayLabel(r.lastBox) : '') + '</small></div>' +
         (rp >= 10 ? '<span class="st" style="background:var(--r2);color:var(--r)">مردودات ' + rp + '%</span>' : '') + '</div>' +
-        line('مبيعات أمس', n2(r.salesDay)) + line('مبيعات الشهر', n2(r.salesMonth), '', r.billsMonth + ' فاتورة') +
+        line('مبيعات أمس', n2(r.salesDay)) + (function () { var x = (d.repDay || []).filter(function (q) { return q.code === r.code; })[0]; if (!x || !x.ret) return ''; var p = x.sales ? Math.round(x.ret / x.sales * 100) : 100; return line('مردود أمس', n2(x.ret) + ' · ' + p + '%', p >= 8 ? 'color:var(--r)' : (p >= 5 ? 'color:var(--a)' : ''), x.retN + ' مردود'); })() + line('مبيعات الشهر', n2(r.salesMonth), '', r.billsMonth + ' فاتورة') +
         line('مردودات الشهر', n2(r.retMonth), rp >= 10 ? 'color:var(--r)' : '', r.retCount + ' مردود · ' + rp + '% من المبيعات') +
         line('تحصيل الشهر', n2(r.collMonth)) + line('رصيد الصندوق', n2(r.cash), r.cash < 0 ? 'color:var(--r)' : '') + line('رصيد البنك', n2(r.bank), r.bank < 0 ? 'color:var(--r)' : '') +
         (r.custCount ? line('عملاؤه عليهم', n2(r.custBal), '', r.custCount + ' عميل') : '') +
@@ -1722,7 +1725,7 @@ function vProfit() {
 function oxDash_() {
   var box = $('dox'); if (!box) return;
   var draw = function () {
-    var d = C.onyx, b = $('dox'); if (!b || S.tab !== 'dash') return;
+    var d = C.onyx, b = $('dox'); if (!b || (S.tab !== 'dash' && S.tab !== 'oxr')) return;
     if (!d || d.none) { b.innerHTML = '<div class="sec-h"><h2>أمس من أونكس</h2></div>' + empty('doc', 'ما وصلت بيانات أونكس بعد', 'تنزل كل ليلة من نسخة القراءة.'); return; }
     var y = d.day || {sales: 0, returns: 0, coll: 0, bills: 0, by: []}, tr = (d.trend || []).filter(function (x) { return x.date < d.date; }).slice(-7);
     var avg = function (k) { return tr.length ? tr.reduce(function (s, x) { return s + (x[k] || 0); }, 0) / tr.length : 0; };
@@ -1769,7 +1772,7 @@ function ofRender_() {
   var ceo = '<section class="hero" style="display:block;margin:0 0 12px;border-radius:24px;padding:20px 22px 14px"><div><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span class="av" style="background:rgba(255,255,255,.12);color:#E9C97A">' + I('office', 20) + '</span><b style="color:#E9C97A;font-size:14px">المدير التنفيذي · خلاصة اليوم</b></div>' +
     mdLines_(r['الخلاصة']).map(function (l) { return '<p style="margin:0 0 8px;line-height:1.9;font-size:14.5px;color:#fff">' + esc(ofTxt_(l)) + '</p>'; }).join('') + '</div></section>';
   var bento = '<div class="bento">' +
-    '<button class="bx gold" data-ot="dec"><small>قرارات من الموظفين</small><b>' + (mdRows_(r['القرارات']).length + pend) + ' <span>بند</span></b></button>' +
+    '<button class="bx gold" onclick="S.bxv=\'wait\';go(\'box\')"><small>بانتظار قرارك · في ينتظرك</small><b>' + (bxCount_() === null ? (mdRows_(r['القرارات']).length + pend) : bxCount_()) + ' <span>بند</span></b></button>' +
     '<button class="bx" data-ot="emp"><small>موظفين يحتاجون انتباه</small><b' + (stop ? ' style="color:var(--r)"' : '') + '>' + (att + stop) + ' <span>من ' + deps.length + (stop ? ' · ' + stop + ' متوقف' : '') + '</span></b></button>' +
     '<button class="bx" data-ot="al"><small>تنبيهات عاجلة وأمنية</small><b>' + al.filter(function (a) { return a['الدرجة'] === 'أحمر' || a['الدرجة'] === 'أمني-مراجعة'; }).length + ' <span>تنبيه</span></b></button>' +
     '<button class="bx" data-ot="emp"><small>مهام متأخرة</small><b' + (late ? ' style="color:var(--r)"' : '') + '>' + late + ' <span>مهمة</span></b></button></div>';
@@ -1792,8 +1795,9 @@ function ofRender_() {
         (c[2] ? '<small class="muted" style="line-height:1.8">السبب: ' + esc(ofTxt_(c[2])) + '</small>' : '') + '<div>' + (c[3] ? '<span class="st" style="' + (/عاجل/.test(c[3]) ? 'background:var(--r2);color:var(--r)' : 'background:var(--b2);color:var(--b)') + '">' + esc(c[3]) + '</span>' : '') + (c[4] ? '<small class="muted" style="margin-inline-start:6px">' + esc(c[4]) + '</small>' : '') + '</div></div>';
     }).join('');
     var aps = ap.map(function (a) { return '<div class="row" style="align-items:flex-start"><div class="rx" style="flex:1"><b style="line-height:1.7">' + esc(a['الملخص']) + '</b><small>' + esc(a['الرقم']) + ' · ' + esc(String(a['القسم']).replace(/-/g, ' ')) + '</small></div><span class="st" style="' + (a['القرار'] === 'معلّق' ? 'background:var(--a2);color:var(--a)' : 'background:var(--g2);color:var(--g)') + '">' + esc(a['القرار']) + '</span></div>'; }).join('');
-    body = '<div class="card"><div class="sec-h"><h2>قرارات يرفعها لك المدير التنفيذي</h2></div>' + (dec || empty('check', 'ما فيه قرارات مطلوبة')) + '</div>' +
-      '<div class="card"><div class="sec-h"><h2>طلبات موافقة من الموظفين</h2></div>' + (aps || empty('check', 'ما فيه طلبات معلّقة')) + '<p class="muted" style="margin:12px 0 0;font-size:12.5px">الموافقة أو الرفض تتم في المكالمة مع المدير التنفيذي، ولا ينفّذ أي موظف شي قبل قرارك.</p></div>';
+    var bxn = bxCount_();
+    body = '<div class="dec"><div style="flex:1"><small>القرارات المعلّقة</small><b>صارت كلها في «ينتظرك» عشان تقرر من مكان واحد' + (bxn ? ' · ' + pl_(bxn, 'item') : '') + '</b></div><button class="btn" style="width:auto" onclick="S.bxv=\'wait\';go(\'box\')">افتح ينتظرك</button></div>' +
+      '<div class="card"><div class="sec-h"><h2>سجل طلبات الموافقة</h2></div>' + (aps || empty('check', 'ما فيه طلبات')) + '<p class="muted" style="margin:12px 0 0;font-size:12.5px">الموافقة أو الرفض تتم في المكالمة مع المدير التنفيذي، ولا ينفّذ أي موظف شي قبل قرارك.</p></div>';
   } else if (S.ot === 'al') {
     var g = S.og || 'top', seen = {};
     var list = al.filter(function (a) { return g === 'all' || (g === 'top' ? (a['الدرجة'] === 'أحمر' || a['الدرجة'] === 'أمني-مراجعة') : a['الدرجة'] === g); })
@@ -2047,6 +2051,44 @@ function vFac() {
   oxGet_().then(draw, function (e) { if (!C.onyx) fail(e); });
 }
 // ===== سلة (البند ٢١): طلبات الجملة والسلات المتروكة — من ملف يحدّثه كلود كل صباح من موصل سلة =====
+// ===== تشغيل أونكس (الرقابة): مشاكل تحتاج مراجعة من نسخة أونكس الليلية — قراءة فقط، أي تصحيح يتم في أونكس بموافقة المالك =====
+function oxIssues_() {
+  var d = C.onyx; if (!d || d.none) return [];
+  var L = [], tb = d.tb, add = function (lv, t, det, go, amt) { L.push({lv: lv, t: t, det: det, go: go, amt: amt, key: 'ox:' + bxHash_(t)}); };
+  if (tb) {
+    if (Math.abs(tb.diff || 0) > 1) add('r', 'ميزان المراجعة غير متوازن · فرق ' + n2(Math.round(tb.diff)), 'مجموع المدين ' + n2(Math.round(tb.dr)) + ' ومجموع الدائن ' + n2(Math.round(tb.cr)) + '، والأصل يتساويان.' + (Math.abs(tb.open || 0) > 1 ? ' والفرق موجود من الرصيد الافتتاحي (' + n2(Math.round(tb.open)) + ')، يعني بدأ من أرصدة أول المدة.' : '') + ' يراجعه المحاسب: قيود الافتتاح وأي قيد يدوي من طرف واحد.', '', Math.abs(tb.diff));
+    (tb.neg || []).forEach(function (a) { add('r', 'رصيد «' + a.name + '» بالسالب ' + n2(Math.round(a.bal)), (/صندوق/.test(a.name) ? 'الصندوق الحقيقي ما يكون رصيده سالب' : 'رصيد البنك السالب يعني سحب على المكشوف أو قيد ناقص') + '. غالباً فيه سند قبض أو إيداع ما انسجل، أو قيد صرف على الحساب الغلط. يطابقه المحاسب مع الكشف.', '', Math.abs(a.bal)); });
+    if (tb.netSales && tb.adj / tb.netSales > 0.05) add('a', 'تسوية المخزون كبيرة · ' + n2(Math.round(tb.adj)) + ' (' + Math.round(tb.adj / tb.netSales * 100) + '% من المبيعات)', 'التسويات تعني فرق بين الجرد الفعلي والنظام: هدر، أو تالف ما انسجل، أو صرف خامات بدون مستند. يحتاج تفصيل التسويات بالتاريخ والصنف.', 'fac', tb.adj);
+  }
+  (d.posting || []).filter(function (p) { return p.state && p.state !== 'محدّث' && !/مهد/.test(p.branch); }).forEach(function (p) { add('a', 'ترحيل ' + p.type + ' ' + p.branch + ' متأخر', 'آخر يوم موجود في أونكس ' + dayLabel(p.last) + ' (' + p.days + ' يوم). الكاشير ما رحّل، فأرقام الفرع ناقصة في أونكس.', 'branches'); });
+  (d.reps || []).filter(function (r) { return r.salesMonth > 0 && r.retMonth / r.salesMonth >= 0.08; }).forEach(function (r) { add('a', 'مردود ' + r.name.replace(/\s+/g, ' ') + ' ' + Math.round(r.retMonth / r.salesMonth * 100) + '% هذا الشهر', 'مردود ' + n2(Math.round(r.retMonth)) + ' من مبيعات ' + n2(Math.round(r.salesMonth)) + ' (' + r.retCount + ' مردود). المعقول تحت 5%. شوف أسبابه: تالف، أو انتهاء صلاحية، أو طلبات زايدة عن حاجة العميل.', 'reps', r.retMonth); });
+  var bad = (d.profit || []).filter(function (p) { return /غير منطقي/.test(p.note || ''); });
+  if (bad.length) add('a', pl_(bad.length, 'item').replace('بند', 'منتج').replace('بنود', 'منتجات') + ' هامشها غير منطقي', 'مثل: ' + bad.slice(0, 3).map(function (p) { return p.name; }).join('، ') + '. غالباً الوصفة ناقصة أو وحدة البيع غلط، فالتكلفة والربح فيها مو صحيحة.', 'profit');
+  var y = d.day; if (y && y.sales) (y.by || []).filter(function (w) { return w.sales > 0 && w.disc / w.sales >= 0.1; }).forEach(function (w) { add('a', 'خصم ' + Math.round(w.disc / w.sales * 100) + '% في ' + w.name.replace(/^مخزن /, '') + ' أمس', 'خصم ' + n2(w.disc) + ' على مبيعات ' + n2(w.sales) + '. تأكد إنه خصم معتمد.', '', w.disc); });
+  var fc = d.factory; if (fc && fc.zeroCount) add('a', fc.zeroCount + ' صنف رصيده صفر أو بالسالب', 'الرصيد السالب يعني صرف أو بيع قبل ما يدخل المخزون في النظام (فاتورة شراء أو تحويل ما انسجل).', 'fac');
+  var lv = {r: 0, a: 1}; return L.sort(function (a, b) { return lv[a.lv] - lv[b.lv] || (b.amt || 0) - (a.amt || 0); });
+}
+function vOxr() {
+  var tab = S.tab, draw = function () {
+    var d = C.onyx; if (S.tab !== tab) return;
+    if (!d || d.none) { $('view').innerHTML = ph('تشغيل أونكس', 'رقابة يومية من نسخة أونكس الليلية') + OX_EMPTY(); return; }
+    var L = oxIssues_(), tb = d.tb, old = oxOld_(d), r = L.filter(function (x) { return x.lv === 'r'; }).length;
+    var st = '<div class="bento"><div class="bx ' + (old ? '' : 'gold') + '"><small>آخر تشغيل للنسخة</small><b>' + dayLabel(d.date, true) + '</b>' + (old ? '<small style="color:var(--r)">بيانات قديمة</small>' : '<small>' + esc(d.generatedAt || '') + '</small>') + '</div>' +
+      '<div class="bx"><small>مشاكل تحتاج مراجعة</small><b' + (r ? ' style="color:var(--r)"' : '') + '>' + L.length + ' <span>' + (r ? r + ' عاجلة' : 'مشكلة') + '</span></b></div>' +
+      (tb ? '<div class="bx"><small>تكلفة المواد · من بداية السنة</small><b>' + tb.matPct + '% <span>من صافي المبيعات</span></b></div><div class="bx"><small>التكلفة الشاملة</small><b>' + tb.allPct + '% <span>الربح التقديري ' + Math.round(100 - tb.allPct) + '%</span></b></div>' : '<div class="bx"><small>نسب التكلفة</small><b>— <span>تبدأ الليلة</span></b></div>') + '</div>';
+    var list = '<div class="card"><div class="sec-h"><h2>مشاكل تحتاج مراجعة</h2><span class="muted" style="font-size:12.5px">' + (L.length ? 'اضغط أي مشكلة تشوف التفاصيل' : '') + '</span></div>' + (L.length ? L.map(function (x, i) {
+      return '<div class="bxc' + (x.lv === 'r' ? ' red' : '') + '" style="border:1px solid var(--ln);border-radius:16px;margin:8px 0"><button type="button" class="bxh" data-xo="' + i + '"><span class="tag ' + x.lv + '">' + (x.lv === 'r' ? 'عاجل' : 'راجع') + '</span><span class="bxt"><b>' + esc(x.t) + '</b></span><span class="och">' + I('chev', 16) + '</span></button><div class="bxb" id="xo' + i + '" hidden><p style="margin:12px 0 0;font-size:13.5px;line-height:1.9">' + esc(x.det) + '</p><div class="bxa">' + (x.go ? '<button class="btn l" data-xg="' + i + '">افتح القسم</button>' : '') + '<button class="btn" data-xt="' + i + '">حوّلها مهمة للمحاسب</button></div></div></div>'; }).join('') : empty('check', 'ما فيه مشاكل', 'كل الفحوصات سليمة')) + '<p class="muted" style="font-size:12px;margin:10px 0 0">الفحص قراءة فقط من النسخة الليلية. أي تصحيح يتم في أونكس نفسه وبموافقتك.</p></div>';
+    var tbc = tb ? '<div class="card"><div class="sec-h"><h2>ميزان المراجعة لين ' + dayLabel(tb.asOf) + '</h2></div><div class="scroll"><table><tr><th>البند</th><th>المبلغ</th><th>من صافي المبيعات</th></tr>' + [['صافي المبيعات', tb.netSales], ['المردودات', tb.returns], ['تكلفة المبيعات (مواد)', tb.cogs], ['تسوية المخزون', tb.adj], ['الرواتب', tb.salaries], ['باقي المصاريف', tb.expenses - tb.salaries]].map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + n2(Math.round(x[1])) + '</td><td>' + (tb.netSales ? Math.round(x[1] / tb.netSales * 1000) / 10 + '%' : '—') + '</td></tr>'; }).join('') + '</table></div></div>' : '';
+    var post = (d.posting || []).length ? '<div class="card"><div class="sec-h"><h2>ترحيل الفروع لأونكس</h2></div>' + d.posting.map(function (p) { var ok = p.state === 'محدّث'; return '<div class="row"><div class="rx" style="flex:1"><b>' + esc(p.branch + ' · ' + p.type) + '</b><small>آخر يوم في أونكس ' + dayLabel(p.last) + '</small></div><span class="tag ' + (ok ? 'g' : (/مهد/.test(p.branch) ? 'a' : 'r')) + '" style="max-width:none">' + esc(p.state || '') + '</span></div>'; }).join('') + '</div>' : '';
+    $('view').innerHTML = ph('تشغيل أونكس', 'رقابة يومية من نسخة أونكس الليلية · قراءة فقط') + st + list + '<div class="card" id="dox"></div>' + tbc + post;
+    oxDash_();
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-xo]'), function (b) { b.onclick = function () { var x = $('xo' + b.dataset.xo); x.hidden = !x.hidden; b.parentNode.classList.toggle('op', !x.hidden); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-xg]'), function (b) { b.onclick = function () { go(L[b.dataset.xg].go); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-xt]'), function (b) { b.onclick = function () { var x = L[b.dataset.xt]; var go2 = function () { dcTaskM_({key: x.key, t: x.t, det: x.det, src: 'تشغيل أونكس', amt: x.amt}); }; if (S.tk) go2(); else { toast('لحظة، المهام تحمّل…'); tkLoad_().then(go2, function () {}); } }; });
+  };
+  if (C.onyx) draw(); else $('view').innerHTML = ph('تشغيل أونكس') + '<div class="card">' + skel() + '</div>';
+  oxGet_().then(draw, function (e) { if (!C.onyx) fail(e); });
+}
 function vSalla() {
   var tab = S.tab, draw = function () {
     var d = C.salla; if (S.tab !== tab || !d) return;
@@ -2118,7 +2160,7 @@ function bxSplit_() {   // ينتظرك · وافقت وباقي التنفيذ 
   });
   return o;
 }
-function bxCount_() { return S.me && S.me.role === 'owner' && C.box ? bxSplit_().wait.length : null; }
+function bxCount_() { return S.me && S.me.role === 'owner' && C.box ? bxSplit_().wait.length + (S.odN || 0) : null; }
 function bxBadge_() {
   var n = bxCount_(); Array.prototype.forEach.call(document.querySelectorAll('.si[data-t="box"], .ni[data-t="box"]'), function (b) { var x = b.querySelector('.snb'); if (n) { if (!x) { x = document.createElement('i'); x.className = 'snb'; b.appendChild(x); } x.textContent = n; } else if (x) x.remove(); });
 }
@@ -2135,7 +2177,7 @@ function vBox() {
   var draw = function () {
     if (S.tab !== tab) return;
     var o = bxSplit_(), L = o[S.bxv] || [];
-    var seg = '<div class="seg" role="tablist" style="margin-bottom:12px;flex-wrap:nowrap;gap:6px">' + [['wait', 'ينتظرك', o.wait.length], ['todo', 'وافقت وباقي التنفيذ', o.todo.length], ['later', 'مؤجلة', o.later.length], ['closed', 'انقفلت', o.closed.length]].map(function (s) { return '<button type="button" role="tab" aria-selected="' + (S.bxv === s[0]) + '" class="' + (S.bxv === s[0] ? 'on' : '') + '" style="min-width:0;padding:8px 4px;font-size:13.5px" data-bv="' + s[0] + '">' + s[1] + ' · ' + s[2] + '</button>'; }).join('') + '</div>';
+    var seg = '<div class="seg" role="tablist" style="margin-bottom:12px;flex-wrap:nowrap;gap:6px">' + [['wait', 'ينتظرك', o.wait.length + (S.odN || 0)], ['todo', 'وافقت وباقي التنفيذ', o.todo.length], ['later', 'مؤجلة', o.later.length], ['closed', 'انقفلت', o.closed.length]].map(function (s) { return '<button type="button" role="tab" aria-selected="' + (S.bxv === s[0]) + '" class="' + (S.bxv === s[0] ? 'on' : '') + '" style="min-width:0;padding:8px 4px;font-size:13.5px" data-bv="' + s[0] + '">' + s[1] + ' · ' + s[2] + '</button>'; }).join('') + '</div>';
     var card = function (x, i) {
       var dd = x.dd, dueT = x.dl ? '<span class="st" style="' + (x.u === 0 ? 'background:var(--r2);color:var(--r)' : 'background:#EEF0F3;color:var(--mu)') + '">المهلة: ' + esc(x.dl) + '</span>' : '';
       var det = (x.t2 && x.t2 !== x.t ? '<p style="margin:6px 0 0">' + esc(x.t2) + '</p>' : '') + (x.rec ? '<p style="margin:6px 0 0"><b style="color:var(--gd3)">التوصية: </b>' + esc(x.rec) + '</p>' : '') + (x.why ? '<p class="muted" style="margin:6px 0 0;font-size:12.5px;line-height:1.8">' + esc(x.why) + '</p>' : '') + (x.need ? '<p style="margin:6px 0 0;font-size:12.5px"><b>المطلوب قبلها: </b>' + esc(x.need) + '</p>' : '') +
@@ -2151,14 +2193,15 @@ function vBox() {
         '<div class="bxb"' + (op ? '' : ' hidden') + '>' + (x.dl && !x.due ? '<p class="muted" style="margin:0;font-size:12.5px">المهلة كما كتبها المدير التنفيذي: ' + esc(x.dl) + '</p>' : '') + det + st + (acts ? '<div class="bxa">' + acts + '</div>' : '') + '</div></div>';
     };
     var hint = {wait: 'موافقتك هنا ما تنفذ شي لحالها: اللي يحتاج إجراء برا (اعتراض، رد، دفع) ينتقل لـ«وافقت وباقي التنفيذ». واللي له رقم طلب ينسجل في سجل الموافقات خلال ١٠ دقايق، واللي بدون رقم يوصل للمدير التنفيذي.', todo: 'هذي وافقت عليها وباقي تنفيذها. لما تنفذ (أنت، أو كلود من كروم وأنت حاضر) اضغط «تم التنفيذ».', later: 'ترجع لـ«ينتظرك» لحالها في تاريخها.', closed: 'آخر ٧ أيام.'}[S.bxv];
-    $('view').innerHTML = ph('ينتظرك', 'كل اللي ينتظر قرارك في مكان واحد') + seg + '<p class="muted" style="font-size:12.5px;margin:0 0 10px;line-height:1.8">' + hint + '</p>' + (L.length ? L.map(function (x, i) { var g = S.bxv === 'wait' && (!i || L[i - 1].u !== x.u) ? '<div class="bxg">' + ['مهلتها خلال يومين', 'لها موعد', 'بدون موعد محدد'][x.u] + ' · ' + L.filter(function (y) { return y.u === x.u; }).length + '</div>' : ''; return g + card(x, i); }).join('') : '<div class="card">' + empty('check', S.bxv === 'wait' ? 'ما فيه شي ينتظرك' : 'القائمة فاضية') + '</div>');
+    $('view').innerHTML = ph('ينتظرك', 'كل اللي ينتظر قرارك في مكان واحد') + seg + '<p class="muted" style="font-size:12.5px;margin:0 0 10px;line-height:1.8">' + hint + '</p>' + (S.bxv === 'wait' ? '<div class="bxg" id="odg2" hidden></div><div class="card od" id="odec2" hidden></div>' + (L.length ? '<div class="bxg">قرارات وطلبات موافقة · ' + L.length + '</div>' : '') : '') + (L.length ? L.map(function (x, i) { var g = S.bxv === 'wait' && (!i || L[i - 1].u !== x.u) ? '<div class="bxg">' + ['مهلتها خلال يومين', 'لها موعد', 'بدون موعد محدد'][x.u] + ' · ' + L.filter(function (y) { return y.u === x.u; }).length + '</div>' : ''; return g + card(x, i); }).join('') : '<div class="card">' + empty('check', S.bxv === 'wait' ? 'ما فيه شي ينتظرك' : 'القائمة فاضية') + '</div>');
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bv]'), function (b) { b.onclick = function () { S.bxv = b.dataset.bv; draw(); }; });
+    if (S.bxv === 'wait') odBox_();
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bo]'), function (b) { b.onclick = function () { var x = L[b.dataset.bo], c = b.parentNode, bd = c.querySelector('.bxb'), o = bd.hidden; S.bxo = S.bxo || {}; S.bxo[x.key] = o; bd.hidden = !o; c.classList.toggle('op', o); b.setAttribute('aria-expanded', String(o)); }; });
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bcp]'), function (b) { b.onclick = function () { var x = L[b.dataset.bcp]; try { navigator.clipboard.writeText(x.txt); toast('انسخ النص'); } catch (e) { toast('ما قدرت أنسخ'); } }; });
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bk]'), function (b) { b.onclick = function () { bxAct_(L[b.dataset.bi], b.dataset.bk, b, draw); }; });
   };
   if (C.box) draw(); else $('view').innerHTML = ph('ينتظرك') + '<div class="card">' + skel() + '</div>';
-  bxLoad_(draw).catch(function (e) { if (!C.box) fail(e); else toast('ما قدرت أحدّث — ' + e.message); });
+  bxLoad_(draw).catch(function (e) { if (!C.box) fail(e); else toast('ما قدرت أحدّث — ' + e.message); }); oLoad_();
 }
 function bxAct_(x, k, btn, redraw) {
   if (k === 'go') { go(x.go); return; }
@@ -2207,8 +2250,40 @@ function oItems_(d) {
   return it.map(function (x, i) { x.i = i; x.u = urg(x); return x; }).sort(function (a, b) { return a.u - b.u || (Number(b.amt) || 0) - (Number(a.amt) || 0) || a.i - b.i; });
 }
 function oSheet_(title, body) { modal('<div class="sec-h"><h2>' + title + '</h2></div>' + body); }
+function odList_(bx, items, done, trk, dd) {
+  // قرارك اليوم
+  var lim = window.innerWidth >= 960 ? 6 : 4, all = S.oall, shown = all ? items : items.slice(0, lim);
+  bx.innerHTML = '<div class="sec-h"><h2>مدفوعات ومتابعات</h2><span class="muted" style="font-size:12.5px">' + (items.length ? (all || items.length <= lim ? items.length : shown.length + ' من ' + items.length) : '') + '</span></div>' +
+    (items.length ? shown.map(function (x, i) {
+      var det = (x.htm ? '<p>' + x.htm + '</p>' : '') + (x.det ? '<p>' + esc(x.det) + '</p>' : '') + ((x.links || []).length ? '<p class="olk">' + morLinks_(x.links) + '</p>' : '') + '<div class="oacts">' + (x.fn ? '<button class="btn" data-ob="' + i + '">' + esc(x.btn) + '</button>' : '') + '<button class="oac" data-dt="' + i + '">' + I('flag', 15, 2.2) + 'حوّله لمهمة</button>' + (x.amt && x.dir !== 'in' ? '<button class="oac" data-dp="' + i + '">' + I('card', 15, 2.2) + 'خطة سداد</button>' : '') + '<button class="oac" data-dz="' + i + '">' + I('cal', 15, 2.2) + 'أجّله</button><button class="odone" data-od="' + i + '">' + I('check', 16, 2.4) + 'تم</button></div>';
+      return '<div class="orw" data-oi="' + i + '" role="button" tabindex="0" aria-expanded="false"><span class="oic ' + x.lv + '">' + I(x.ic, 19) + '</span><div class="ox"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + (x.s ? ' · ' + esc(x.s) : '') + '</small></div>' +
+        (x.amt ? '<div class="oam' + (x.dir === 'in' ? ' in' : '') + '">' + n2(Math.round(x.amt)) + '</div>' : '') + '<span class="och">' + I('chev', 16) + '</span></div>' + (det ? '<div class="odet" id="od' + i + '" hidden>' + det + '</div>' : '');
+    }).join('') + (items.length > lim || done.length || trk.length ? '<div class="ofoot">' + (items.length > lim ? '<button class="omore" id="omore">' + (all ? 'أقل' : 'عرض الكل · ' + items.length) + '</button>' : '<span></span>') + '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (trk.length ? '<button class="odn odt" id="odt">' + I('flag', 14, 2.4) + ' قيد المتابعة ' + trk.length + '</button>' : '') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</span></div>' : '')
+    : empty('check', 'ما فيه شي ينتظرك', 'كل شي ماشي') + (done.length || trk.length ? '<div class="ofoot"><span></span><span style="display:flex;gap:8px;flex-wrap:wrap">' + (trk.length ? '<button class="odn odt" id="odt">' + I('flag', 14, 2.4) + ' قيد المتابعة ' + trk.length + '</button>' : '') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</span></div>' : ''));
+  Array.prototype.forEach.call(document.querySelectorAll('#' + bx.id + ' .orw'), function (r) {
+    var t = function () { var dt = $('od' + r.dataset.oi); if (!dt) return; dt.hidden = !dt.hidden; r.classList.toggle('op', !dt.hidden); r.setAttribute('aria-expanded', String(!dt.hidden)); };
+    r.onclick = t; r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t(); } };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#' + bx.id + ' [data-ob]'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); shown[bt.dataset.ob].fn(); }; });
+  if ($('omore')) $('omore').onclick = function () { S.oall = !S.oall; oDraw_(); };
+  Array.prototype.forEach.call(document.querySelectorAll('#' + bx.id + ' [data-od]'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); oDone_(shown[bt.dataset.od], true); }; });
+  [['dt', dcTaskM_], ['dp', dcPlanM_], ['dz', dcSnoozeM_]].forEach(function (p) { Array.prototype.forEach.call(document.querySelectorAll('#' + bx.id + ' [data-' + p[0] + ']'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); var x = shown[bt.dataset[p[0]]]; if (p[0] !== 'dz' && !S.tk) { toast('لحظة، المهام تحمّل…'); tkLoad_().catch(function () {}); return; } p[1](x); }; }); });
+  if ($('odt')) $('odt').onclick = function () { dcTrackM_(trk); };
+  if ($('odn')) $('odn').onclick = function () {
+    var md = modal('<div class="sec-h"><h2>أنجزتها</h2></div>' + done.map(function (x, i) { return '<div class="row"><div class="rx" style="flex:1;min-width:0"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + ' · تم ' + dayLabel(dd[x.key]) + '</small></div><button class="lnk" data-ou="' + i + '">رجّعه</button></div>'; }).join('') + '<p class="muted" style="font-size:12.5px;margin:12px 0 0">لو رجع نفس البند بمبلغ مختلف في ملخص بكرة، يطلع لك من جديد.</p>');
+    Array.prototype.forEach.call(md.querySelectorAll('[data-ou]'), function (b) { b.onclick = function () { md.remove(); oDone_(done[b.dataset.ou], false); }; });
+  };
+}
+function odBox_() {
+  var d = S.odash, bx = $('odec2'); if (!d || !bx) return;
+  var m = C.morning && !C.morning.none ? C.morning : null;
+  var old = m && m.dateISO < isoToday_(), dd = C.decDone || {}, all0 = oItems_(d).map(function (x, j) { x.j = j; x.dc = dcState_(x); if (x.dc && !x.dc.hide) { x.lv = 'r'; x.s = x.dc.txt; x.u = -1; } return x; }).sort(function (a, b) { return a.u - b.u || a.j - b.j; }), items = all0.filter(function (x) { return !dd[x.key] && !(x.dc && x.dc.hide); }), done = all0.filter(function (x) { return dd[x.key]; }), trk = all0.filter(function (x) { return !dd[x.key] && x.dc && x.dc.hide; });
+  S.odN = items.length; bx.hidden = !items.length && !done.length && !trk.length; var gh = $('odg2'); if (gh) { gh.hidden = bx.hidden; gh.textContent = 'مدفوعات ومتابعات من ملخص الصباح · ' + items.length; }
+  odList_(bx, items, done, trk, dd); bxBadge_();
+  if (S.odOpen !== undefined && S.odOpen !== null) { var r = bx.querySelector('.orw[data-oi="' + S.odOpen + '"]'); S.odOpen = null; if (r) { r.click(); r.scrollIntoView({behavior: 'smooth', block: 'center'}); } }
+}
 function oDraw_() {
-  var d = S.odash; if (!d || S.tab !== 'dash' || !$('oh')) return;
+  var d = S.odash; if (d && S.tab === 'box' && $('odec2')) { odBox_(); return; } if (!d || S.tab !== 'dash' || !$('oh')) return;
   var k = d.kpi, m = C.morning && !C.morning.none ? C.morning : null, b = m ? m.brief || {} : {}, cl = b.closings || {}, tl = b.tiles || {};
   var old = m && m.dateISO < isoToday_(), dd = C.decDone || {}, all0 = oItems_(d).map(function (x, j) { x.j = j; x.dc = dcState_(x); if (x.dc && !x.dc.hide) { x.lv = 'r'; x.s = x.dc.txt; x.u = -1; } return x; }).sort(function (a, b) { return a.u - b.u || a.j - b.j; }), items = all0.filter(function (x) { return !dd[x.key] && !(x.dc && x.dc.hide); }), done = all0.filter(function (x) { return dd[x.key]; }), trk = all0.filter(function (x) { return !dd[x.key] && x.dc && x.dc.hide; });
   var crS = crSum_(), crT = crS ? crS.bal : 0;
@@ -2223,28 +2298,7 @@ function oDraw_() {
   $('ost').innerHTML = '<div><small>عليك خلال 7 أيام</small><b style="color:#F4A3A3">' + (m ? n2(Math.round(tl.owe || 0)) : '…') + '</b></div>' +
     '<div><small>لك</small><b style="color:#7FD8B6">' + ((m || crS) && (crS || !C.coll) ? n2(Math.round((tl.owed || 0) + crT)) : '…') + '</b></div>' +
     '<div><small>الصافي</small>' + (m && (crS || !C.coll) ? (function (v) { return '<b dir="ltr" style="color:' + (v >= 0 ? 'var(--g)' : 'var(--r)') + '">' + (v < 0 ? '−' : '') + n2(Math.abs(v)) + '</b>'; })(Math.round((tl.owed || 0) + crT - (tl.owe || 0))) : '<b>…</b>') + '</div>';
-  // قرارك اليوم
-  var lim = window.innerWidth >= 960 ? 6 : 4, all = S.oall, shown = all ? items : items.slice(0, lim);
-  $('odec').innerHTML = '<div class="sec-h"><h2>يحتاجك اليوم</h2><span class="muted" style="font-size:12.5px">' + (items.length ? (all || items.length <= lim ? items.length : shown.length + ' من ' + items.length) : '') + '</span></div>' +
-    (items.length ? shown.map(function (x, i) {
-      var det = (x.htm ? '<p>' + x.htm + '</p>' : '') + (x.det ? '<p>' + esc(x.det) + '</p>' : '') + ((x.links || []).length ? '<p class="olk">' + morLinks_(x.links) + '</p>' : '') + '<div class="oacts">' + (x.fn ? '<button class="btn" data-ob="' + i + '">' + esc(x.btn) + '</button>' : '') + '<button class="oac" data-dt="' + i + '">' + I('flag', 15, 2.2) + 'حوّله لمهمة</button>' + (x.amt && x.dir !== 'in' ? '<button class="oac" data-dp="' + i + '">' + I('card', 15, 2.2) + 'خطة سداد</button>' : '') + '<button class="oac" data-dz="' + i + '">' + I('cal', 15, 2.2) + 'أجّله</button><button class="odone" data-od="' + i + '">' + I('check', 16, 2.4) + 'تم</button></div>';
-      return '<div class="orw" data-oi="' + i + '" role="button" tabindex="0" aria-expanded="false"><span class="oic ' + x.lv + '">' + I(x.ic, 19) + '</span><div class="ox"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + (x.s ? ' · ' + esc(x.s) : '') + '</small></div>' +
-        (x.amt ? '<div class="oam' + (x.dir === 'in' ? ' in' : '') + '">' + n2(Math.round(x.amt)) + '</div>' : '') + '<span class="och">' + I('chev', 16) + '</span></div>' + (det ? '<div class="odet" id="od' + i + '" hidden>' + det + '</div>' : '');
-    }).join('') + (items.length > lim || done.length || trk.length ? '<div class="ofoot">' + (items.length > lim ? '<button class="omore" id="omore">' + (all ? 'أقل' : 'عرض الكل · ' + items.length) + '</button>' : '<span></span>') + '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (trk.length ? '<button class="odn odt" id="odt">' + I('flag', 14, 2.4) + ' قيد المتابعة ' + trk.length + '</button>' : '') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</span></div>' : '')
-    : empty('check', 'ما فيه شي ينتظرك', 'كل شي ماشي') + (done.length || trk.length ? '<div class="ofoot"><span></span><span style="display:flex;gap:8px;flex-wrap:wrap">' + (trk.length ? '<button class="odn odt" id="odt">' + I('flag', 14, 2.4) + ' قيد المتابعة ' + trk.length + '</button>' : '') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</span></div>' : ''));
-  Array.prototype.forEach.call(document.querySelectorAll('#odec .orw'), function (r) {
-    var t = function () { var dt = $('od' + r.dataset.oi); if (!dt) return; dt.hidden = !dt.hidden; r.classList.toggle('op', !dt.hidden); r.setAttribute('aria-expanded', String(!dt.hidden)); };
-    r.onclick = t; r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t(); } };
-  });
-  Array.prototype.forEach.call(document.querySelectorAll('#odec [data-ob]'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); shown[bt.dataset.ob].fn(); }; });
-  if ($('omore')) $('omore').onclick = function () { S.oall = !S.oall; oDraw_(); };
-  Array.prototype.forEach.call(document.querySelectorAll('#odec [data-od]'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); oDone_(shown[bt.dataset.od], true); }; });
-  [['dt', dcTaskM_], ['dp', dcPlanM_], ['dz', dcSnoozeM_]].forEach(function (p) { Array.prototype.forEach.call(document.querySelectorAll('#odec [data-' + p[0] + ']'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); var x = shown[bt.dataset[p[0]]]; if (p[0] !== 'dz' && !S.tk) { toast('لحظة، المهام تحمّل…'); tkLoad_().catch(function () {}); return; } p[1](x); }; }); });
-  if ($('odt')) $('odt').onclick = function () { dcTrackM_(trk); };
-  if ($('odn')) $('odn').onclick = function () {
-    var md = modal('<div class="sec-h"><h2>أنجزتها</h2></div>' + done.map(function (x, i) { return '<div class="row"><div class="rx" style="flex:1;min-width:0"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + ' · تم ' + dayLabel(dd[x.key]) + '</small></div><button class="lnk" data-ou="' + i + '">رجّعه</button></div>'; }).join('') + '<p class="muted" style="font-size:12.5px;margin:12px 0 0">لو رجع نفس البند بمبلغ مختلف في ملخص بكرة، يطلع لك من جديد.</p>');
-    Array.prototype.forEach.call(md.querySelectorAll('[data-ou]'), function (b) { b.onclick = function () { md.remove(); oDone_(done[b.dataset.ou], false); }; });
-  };
+  S.odN = items.length; if ($('odec')) odList_($('odec'), items, done, trk, dd);
   // مربعات الأقسام
   var TIC = {' ca': 'scale', ' ct': 'card', ' cp': 'inbox', ' cb': 'check', ' cg': 'receipt', ' cs': 'office', ' ck': 'flag', ' cy': 'cal'};
   var tile = function (cls, dot, label, val, sub, attr) { return '<button class="ot' + cls + '"' + attr + '><span class="oth">' + (TIC[cls] ? '<span class="otic">' + I(TIC[cls], 17, 2) + '</span>' : '') + '<span class="otl">' + label + '</span><i class="odot ' + dot + '"></i></span><b class="ov">' + val + '</b><small class="os">' + sub + '</small></button>'; };
@@ -2284,7 +2338,7 @@ function oDraw_() {
   var up = (d.alerts || []).filter(function (a) { return !(a.c === 1 || /معلّقة/.test(a.t)); });
   var later = (b.todo || []).filter(function (x) { return x.group !== 'now'; });
   var chip = function (id, ic, l, n) { return n === 0 ? '' : '<button data-oc="' + id + '">' + I(ic, 16) + l + (n ? ' <b>' + n + '</b>' : '') + '</button>'; };
-  $('ochips').innerHTML = ($('cchb') ? chip('ox', 'doc', 'أمس في أونكس') : '') + chip('rep', 'inbox', 'ردود جاهزة', (b.replies || []).length) + chip('up', 'cal', 'القادم', up.length) + chip('later', 'leave', 'تقدر تنتظر', later.length) + chip('done', 'check', 'المنجز', (b.done || []).length) + (m ? chip('sys', 'gear', 'حالة النظام') : '');
+  $('ochips').innerHTML = chip('rep', 'inbox', 'ردود جاهزة', (b.replies || []).length) + chip('up', 'cal', 'القادم', up.length) + chip('later', 'leave', 'تقدر تنتظر', later.length) + chip('done', 'check', 'المنجز', (b.done || []).length) + (m ? chip('sys', 'gear', 'حالة النظام') : '');
   Array.prototype.forEach.call(document.querySelectorAll('#ochips [data-oc]'), function (a) {
     a.onclick = function () {
       var c = a.dataset.oc;
@@ -2503,12 +2557,7 @@ function ccRing_(p, lbl, sub) {
   var r = 46, c = 2 * Math.PI * r, v = Math.max(0, Math.min(1, p));
   return '<div class="ccr"><svg viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="' + r + '" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="9"/><circle cx="55" cy="55" r="' + r + '" fill="none" stroke="url(#ccgr)" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + (c * v).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 55 55)"/><defs><linearGradient id="ccgr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2D38A"/><stop offset="1" stop-color="#B8892B"/></linearGradient></defs></svg><div><b>' + lbl + '</b><small>' + sub + '</small></div></div>';
 }
-function ccOpen_(i) {
-  var o = $('odec'); if (!o) return; o.hidden = false;
-  var r = i >= 0 ? document.querySelector('#odec .orw[data-oi="' + i + '"]') : null;
-  if (r && r.getAttribute('aria-expanded') !== 'true') r.click();
-  (r || o).scrollIntoView({behavior: 'smooth', block: 'center'});
-}
+function ccOpen_(i) { S.odOpen = i >= 0 ? i : null; S.bxv = 'wait'; go('box'); }
 function ccBm_() {
   var b = $('ccbm'); if (!b) return; var bd = C.branches;
   if (!bd) { b.innerHTML = '<div class="sec-h"><h2>الفروع هذا الشهر</h2></div><div class="sk" style="height:110px"></div>'; return; }
@@ -2534,25 +2583,27 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   var leg = '<div class="cclg">' + (ch.Y || []).map(function (x) { var na = x[1] === null; return '<span' + (na ? ' class="na"' : '') + '><em style="background:' + (na ? 'transparent' : COL[x[0]]) + '"></em>' + x[0] + (na ? (x[0] === 'التوصيل' && DVD.asOf ? ': آخر بيانات ' + dayLabel(DVD.asOf) : ': ما وصل') : '<b>' + n2(Math.round(x[1])) + '</b><small>' + Math.round(x[1] / tot * 100) + '%</small>') + '</span>'; }).join('') + '</div>';
   var sl0 = C.salla && !C.salla.none ? C.salla : null, bh = C.branches ? brHist_(C.branches.days || []) : {}, so = {};
   if (sl0) (sl0.orders || []).forEach(function (o) { if (!/ملغي|مسترجع/.test(o.status)) so[o.date] = (so[o.date] || 0) + (Number(o.total) || 0); });
-  var CH = [{n: 'الفروع', f: function (k) { var o = bh[k]; return o ? Object.keys(o).reduce(function (s, n) { return s + (Number(o[n]) || 0); }, 0) : null; }}, {n: 'سلة', f: function (k) { return sl0 ? so[k] || 0 : null; }}];
+  var oxT = {}; ((C.onyx && !C.onyx.none ? C.onyx.trend : null) || []).forEach(function (t) { if (t.rep !== undefined) oxT[t.date] = t.rep; });
+  var CH = [{n: 'المناديب', v: 'باعوا', h: 'متوسطهم', f: function (k) { return oxT[k] !== undefined ? oxT[k] : null; }}, {n: 'الفروع', f: function (k) { var o = bh[k]; return o ? Object.keys(o).reduce(function (s, n) { return s + (Number(o[n]) || 0); }, 0) : null; }}, {n: 'سلة', f: function (k) { return sl0 ? so[k] || 0 : null; }}];
   var D8 = []; for (var q = 7; q >= 0; q--) D8.push(tkAdd_(yd, -q));
   CH.forEach(function (c) { c.y = c.f(yd); var pv = D8.slice(0, 7).map(c.f).filter(function (v) { return v !== null; }); c.avg = pv.length >= 3 && c.y !== null ? pv.reduce(function (s, v) { return s + v; }, 0) / pv.length : 0; });
   var cmpC = CH.filter(function (c) { return c.avg > 0; }), sy = cmpC.reduce(function (s, c) { return s + c.y; }, 0), sa = cmpC.reduce(function (s, c) { return s + c.avg; }, 0), dlt = sa ? Math.round((sy / sa - 1) * 100) : null;
+  var tbx = C.onyx && !C.onyx.none ? C.onyx.tb : null, prf = tbx && ch.yOk ? '<p class="ccpf">الربح التقديري لأمس ≈ <b>' + n2(Math.round(ch.y * (100 - tbx.allPct) / 100)) + '</b> ر.س <small>بعد كل التكاليف (' + tbx.allPct + '% حسب ميزان المراجعة لين ' + dayLabel(tbx.asOf) + ')</small></p>' : '';
   var pill = dlt === null ? '' : '<span class="ccpl' + (dlt < 0 ? ' dn' : '') + '" title="مقارنة ' + cmpC.map(function (c) { return c.n; }).join(' و') + ' بمتوسط آخر 7 أيام">' + (dlt >= 0 ? '↑ ' : '↓ ') + Math.abs(dlt) + '% عن متوسط 7 أيام</span>';
-  var tv = D8.map(function (k) { var v = 0, any = false; CH.forEach(function (c) { var x = c.f(k); if (x !== null && (c.n !== 'سلة' || k >= tkAdd_(yd, -29))) { v += x; any = true; } }); return any ? v : null; }), tmx = Math.max.apply(null, tv.map(function (v) { return v || 0; }).concat([1]));
+  var tv = D8.map(function (k) { var v = 0, any = false; cmpC.forEach(function (c) { var x = c.f(k); if (x !== null && (c.n !== 'سلة' || k >= tkAdd_(yd, -29))) { v += x; any = true; } }); return any ? v : null; }), tmx = Math.max.apply(null, tv.map(function (v) { return v || 0; }).concat([1]));
   var spark = '<div class="ccsp" aria-label="الفروع وسلة آخر 8 أيام">' + D8.map(function (k, i) { var v = tv[i], last = i === D8.length - 1; return '<div' + (last ? ' class="t"' : '') + ' title="' + dayLabel(k, true) + ': ' + (v === null ? 'ما فيه بيانات' : n2(Math.round(v))) + '"><i style="height:' + (v === null ? 3 : Math.max(4, Math.round(84 * v / tmx))) + 'px"></i>' + (last ? 'أمس' : +k.slice(8, 10)) + '</div>'; }).join('') + '</div>';
   var ins = cmpC.map(function (c) { var r = c.y / c.avg, p = Math.round((r - 1) * 100); c.mag = Math.abs(r - 1);
-    c.tx = r >= 1.6 ? c.n + ' باعت أمس <b>' + n2(Math.round(c.y)) + '</b>، يعني <b class="up">' + r.toFixed(1) + ' ضعف</b> متوسطها' : (r >= 1.1 ? c.n + ' فوق متوسطها <b class="up">(+' + p + '%)</b>' : (r > 0.9 ? c.n + ' على متوسطها تقريباً <b>(' + (p > 0 ? '+' : '') + p + '%)</b>' : c.n + ' تحت متوسطها <b class="dn">(' + p + '%)</b>')); return c; }).sort(function (a, b) { return b.mag - a.mag; }).map(function (c) { return c.tx; });
+    var hv = c.h || 'متوسطها'; c.tx = r >= 1.6 ? c.n + ' ' + (c.v || 'باعت') + ' أمس <b>' + n2(Math.round(c.y)) + '</b>، يعني <b class="up">' + r.toFixed(1) + ' ضعف</b> ' + hv : (r >= 1.1 ? c.n + ' فوق ' + hv + ' <b class="up">(+' + p + '%)</b>' : (r > 0.9 ? c.n + ' على ' + hv + ' تقريباً <b>(' + (p > 0 ? '+' : '') + p + '%)</b>' : c.n + ' تحت ' + hv + ' <b class="dn">(' + p + '%)</b>')); return c; }).sort(function (a, b) { return b.mag - a.mag; }).map(function (c) { return c.tx; });
   var low = Object.keys(S.tg || {}).map(function (n) { var t = Number(S.tg[n]) || 0, w = D8.slice(1).reduce(function (s, k) { return s + (Number((bh[k] || {})[n]) || 0); }, 0); return t ? {n: n, p: Math.round(w / t * 100)} : null; }).filter(function (x) { return x && x.p < 100; }).sort(function (a, b) { return a.p - b.p; })[0];
   if (low) ins.push('و' + low.n + ' تحت هدف الأسبوع <b class="dn">(' + low.p + '%)</b>');
   var mon = ch.mon, y0 = +mon.slice(0, 4), mo = +mon.slice(5, 7), dim = new Date(y0, mo, 0).getDate(), el = Math.max(1, +yd.slice(8, 10)), proj = Math.round(ch.m / el * dim);
-  var src = m ? 'الأعمدة والمقارنة: الفروع وسلة يوم بيوم · المصدر: ملخص صباح ' + dayLabel(m.dateISO) + ' · أونكس · سلة' : 'بانتظار ملخص الصباح';
+  var src = m ? 'الأعمدة والمقارنة: ' + cmpC.map(function (c) { return c.n; }).join(' و') + ' يوم بيوم · المصدر: ملخص صباح ' + dayLabel(m.dateISO) + ' · أونكس · سلة' : 'بانتظار ملخص الصباح';
   var top = (items || []).slice(0, 4), bn = bxCount_();
   var dec = '<div class="ccd"><div class="ccd-h"><h3>قرارك اليوم</h3>' + (bn ? '<button type="button" class="ccd-bx" data-cbx>' + pl_(bn, 'item') + ' في ينتظرك</button>' : '') + '</div>' +
     (top.length ? top.map(function (x, i) { var tg = x.u === 0 ? ['r', 'اليوم'] : [x.lv === 'r' ? 'r' : 'a', x.src]; return '<button type="button" class="ccd-r" data-ci="' + i + '"><span class="tag ' + tg[0] + '">' + esc(tg[1]) + '</span><b>' + esc(x.t) + '</b>' + (x.amt ? '<span class="n">' + n2(Math.round(x.amt)) + '</span>' : '') + '</button>'; }).join('') : '<p class="ccd-z">' + I('check', 16) + ' ما فيه شي عاجل اليوم</p>') +
     (items && items.length ? '<button type="button" class="ccd-all" data-call>' + (items.length > top.length ? 'كل العاجل · ' + items.length : 'افتح التفاصيل والإجراءات') + ' ←</button>' : '') + '</div>';
   hb.innerHTML = '<div class="cch-k">' + (ins.length ? '<p class="ccins">' + ins.join('، ') + '.</p>' : '') +
-    '<div class="cch-bg"><span class="cch-v n">' + (ch.yOk ? n2(Math.round(ch.y)) : '…') + '</span><span class="cch-u">ر.س · مبيعات أمس من كل القنوات<small>' + dayLabel(yd, true) + '</small></span>' + pill + '</div>' + bar + leg + spark + '<span class="cch-s">' + src + '</span></div>' +
+    '<div class="cch-bg"><span class="cch-v n">' + (ch.yOk ? n2(Math.round(ch.y)) : '…') + '</span><span class="cch-u">ر.س · مبيعات أمس من كل القنوات<small>' + dayLabel(yd, true) + '</small></span>' + pill + '</div>' + bar + leg + prf + spark + '<span class="cch-s">' + src + '</span></div>' +
     '<div class="cch-side"><div class="cch-m">' + ccRing_(el / dim, Math.round(el / dim * 100) + '%', 'مضى من ' + MON_L[mo - 1]) + '<div class="cch-mt"><span class="cch-l">من بداية ' + MON_L[mo - 1] + '</span><b class="n">' + (ch.mOk ? n2(Math.round(ch.m)) : '…') + '<small>ر.س</small></b>' +
     (ch.mOk ? '<span class="cch-p">بنفس المعدل ينتهي الشهر عند <b>' + n2(proj) + '</b></span>' : '') + (ch.mDv !== null && DVD.asOf && dvStale ? '<span class="cch-s" style="margin-top:4px">التوصيل فيه لين ' + dayLabel(DVD.asOf) + ' بس</span>' : '') + '</div></div>' + dec + '</div>';
   Array.prototype.forEach.call(hb.querySelectorAll('[data-ci]'), function (b) { b.onclick = function () { ccOpen_(Number(b.dataset.ci)); }; });
@@ -2562,7 +2613,13 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   // نبض الأقسام: كل قسم له حالة ورقم رئيسي وسطر واحد
   var T = [], st = function (c, t) { return {c: c, t: t}; };
   var brs = cl.branches || [], bad = brs.filter(function (x) { return x.state !== 'ok' || (x.mada && x.mada.ok === false) || (x.drawer && x.drawer.ok === false); });
-  if (can('branches')) T.push({go: 'branches', ic: 'store', n: 'الفروع', v: m && !bf.wait ? n2(Math.round(bf.total)) : '…', u: 'ر.س أمس', sub: cl.cmp ? String(cl.cmp) : 'صافي الإقفال', s: !m ? st('n', 'بانتظار الملخص') : (m.dateISO < td ? st('n', 'ملخص اليوم ما وصل') : (bad.length ? st('a', 'تنبيه في ' + bad.map(function (x) { return x.name; }).join(' و')) : (bf.ox.length ? st('a', 'إقفال ناقص · مكمّل من أونكس') : st('g', 'الإقفال سليم')))), f: m ? 'إقفالات ' + dayLabel(isoPrev_(m.dateISO)) : ''});
+  var wk = function (n, o) { var t = 0, c = 0; for (var q = 0; q < 7; q++) { var x = (bh[tkAdd_(yd, -q - o)] || {})[n]; if (x !== undefined) { t += Number(x) || 0; c++; } } return c >= 5 ? t : null; };
+  var drop = brs.filter(function (x) { return !/مهد/.test(x.name); }).map(function (x) { var a = wk(x.name, 0), b2 = wk(x.name, 7); return a !== null && b2 ? {n: x.name, p: Math.round((a / b2 - 1) * 100)} : null; }).filter(function (x) { return x && x.p <= -15; }).sort(function (a, b) { return a.p - b.p; })[0];
+  if (can('branches')) T.push({go: 'branches', ic: 'store', n: 'الفروع', v: m && !bf.wait ? n2(Math.round(bf.total)) : '…', u: 'ر.س أمس', sub: cl.cmp ? String(cl.cmp) : 'صافي الإقفال', s: !m ? st('n', 'بانتظار الملخص') : (m.dateISO < td ? st('n', 'ملخص اليوم ما وصل') : (bad.length ? st('a', 'تنبيه في ' + bad.map(function (x) { return x.name; }).join(' و')) : drop ? st('a', drop.n + ' نازل ' + Math.abs(drop.p) + '% هذا الأسبوع') : (bf.ox.length ? st('a', 'إقفال ناقص · مكمّل من أونكس') : st('g', 'الإقفال سليم')))), f: m ? 'إقفالات ' + dayLabel(isoPrev_(m.dateISO)) : ''});
+  var ox0 = C.onyx && !C.onyx.none ? C.onyx : null, rd = ox0 && ox0.date === yd ? ox0.repDay || null : null, rS = rd ? rd.reduce(function (s, r) { return s + r.sales - r.disc; }, 0) : null, rR = rd ? rd.reduce(function (s, r) { return s + r.ret; }, 0) : 0;
+  var rm = ox0 ? (ox0.reps || []).filter(function (r) { return r.salesMonth > 0; }) : [], rmS = rm.reduce(function (s, r) { return s + r.salesMonth; }, 0), rmR = rm.reduce(function (s, r) { return s + r.retMonth; }, 0), rmP = rmS ? Math.round(rmR / rmS * 100) : null;
+  var rw = rd ? rd.filter(function (r) { return r.sales > 0; }).map(function (r) { return {n: r.name.replace(/^المندوب\s*/, ''), p: Math.round(r.ret / r.sales * 100)}; }).sort(function (a, b) { return b.p - a.p; })[0] : null;
+  if (can('reps')) T.push({go: 'reps', ic: 'users', n: 'المناديب', v: rS !== null ? n2(Math.round(rS)) : (ch.Y && ch.Y[0] && ch.Y[0][1] !== null ? n2(Math.round(ch.Y[0][1])) : '…'), u: 'ر.س أمس', sub: (rd ? 'مردود أمس ' + n2(Math.round(rR)) : '') + (rmP !== null ? (rd ? ' · ' : '') + 'مردود الشهر ' + rmP + '%' : ''), s: !ox0 ? st('n', '…') : (rw && rw.p >= 8 ? st('r', 'مردود ' + rw.n + ' ' + rw.p + '%') : (rmP !== null && rmP >= 5 ? st('a', 'مردود الشهر ' + rmP + '%') : st('g', 'المردود طبيعي'))), f: ox0 ? 'أونكس ' + dayLabel(ox0.date) : ''});
   var sl = C.salla && !C.salla.none ? C.salla : null, cr = sl ? (sl.carts || []).length : 0;
   if (can('salla')) T.push({go: 'salla', ic: 'receipt', n: 'سلة', v: sl ? n2(Math.round(sl.yTotal || 0)) : '…', u: 'ر.س أمس', sub: sl ? 'الشهر ' + n2(Math.round(sl.monthTotal || 0)) + ' · ' + pl_(sl.monthCount || 0, 'req') : '', s: !sl ? st('n', C.salla ? 'ما وصل ملف سلة' : '…') : (cr ? st('a', cr + ' سلات متروكة') : st('g', 'ما فيه سلات متروكة')), f: sl && sl.updatedAt ? 'تحدّث ' + dayLabel(String(sl.updatedAt).slice(0, 10)) : ''});
   var dl = (((m || {}).brief || {}).delivery || []).filter(function (x) { return x.closed; }), tro = typeof TRK !== 'undefined' ? TRK.obj.length : 0;
@@ -2576,6 +2633,8 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   var of = C.offices && !C.offices.none ? C.offices : null;
   if (can('offices')) { var ob = of ? of['اللوحة'] || {} : {}, deps = ob['الأقسام'] || [], oday = of ? of['التاريخ'] || ob['التاريخ'] || '' : '', att = deps.filter(function (x) { return /انتباه/.test(x['الحالة']); }).length, stp = deps.filter(function (x) { return /متوقف/.test(x['الحالة']); }).length;
     T.push({go: 'offices', ic: 'office', n: 'موظفين الذكاء', v: of ? (deps.length - att - stp) : '…', u: of ? 'من ' + deps.length + ' بدون ملاحظات' : '', sub: of ? (att ? att + ' يحتاجون انتباه' : '') + (stp ? (att ? ' · ' : '') + stp + ' متوقف' : '') : '', s: !of ? st('n', C.offices ? 'ما وصل تقرير' : '…') : (oday && oday < td ? st('r', 'تشغيل اليوم ما وصل') : (stp ? st('r', stp + ' متوقف') : (att ? st('a', att + ' يحتاج انتباه') : st('g', 'كلهم شغالين')))), f: oday ? 'تشغيل ' + dayLabel(oday) : ''}); }
+  if (can('oxr')) { var XI = ox0 ? oxIssues_() : null, xr = XI ? XI.filter(function (x) { return x.lv === 'r'; }).length : 0;
+    T.push({go: 'oxr', ic: 'scale', n: 'تشغيل أونكس', v: XI ? XI.length : '…', u: 'مشكلة تحتاج مراجعة', sub: XI && XI.length ? XI[0].t : 'الميزان والصناديق والترحيل', s: !XI ? st('n', '…') : (oxOld_(ox0) ? st('n', 'النسخة قديمة') : (xr ? st('r', xr + ' عاجلة') : (XI.length ? st('a', 'راجعها') : st('g', 'كل الفحوصات سليمة')))), f: ox0 ? 'نسخة ' + dayLabel(ox0.date) : ''}); }
   var LB = {g: 'سليم', a: 'انتبه', r: 'عاجل', n: 'ينتظر بيانات'};
   pb.innerHTML = T.map(function (x) { return '<button type="button" class="ccq ' + x.s.c + (x.stale ? ' old' : '') + '" data-go="' + x.go + '"><span class="ccq-h"><span class="ccq-i">' + I(x.ic, 18, 2) + '</span><b>' + x.n + '</b><span class="ccq-st" title="' + LB[x.s.c] + '"><i></i>' + esc(x.s.t) + '</span></span><span class="ccq-v">' + x.v + '<small>' + x.u + '</small></span><span class="ccq-sub">' + esc(x.sub) + '</span>' + (x.f ? '<span class="ccq-f">' + I('cal', 11) + esc(x.f) + '</span>' : '') + '</button>'; }).join('');
   Array.prototype.forEach.call(pb.querySelectorAll('[data-go]'), function (a) { a.onclick = function () { if (a.dataset.go === 'offices') S.ot = 'dec'; go(a.dataset.go); }; });
@@ -2651,7 +2710,6 @@ function vDashO() {
       '<div class="cch-a"><button type="button" class="ohi" id="ohi" data-go="box"></button><button class="ib" id="osq" aria-label="بحث سريع">' + I('srch', 20) + '</button><button class="ib" id="bell" aria-label="قرارات اليوم">' + I('bell', 21) + '</button><button class="qbtn gd" data-q="tasks">' + I('plus', 17, 2.4) + 'مهمة جديدة</button></div></div>' +
       '<div class="cch-body" id="cchb"><div class="sk" style="height:220px;opacity:.15"></div></div></section>' +
       '<div class="ccs"><h2>نبض الأقسام</h2><span>اضغط أي قسم ينقلك له</span></div><div class="ccp" id="ccp"></div>' +
-      '<div class="card od" id="odec" hidden></div>' +
       '<div class="ccrow"><div class="card" id="ccbm"></div><div class="card dmn ccm"><div class="sec-h"><h2>المال خلال 7 أيام</h2></div><div class="ost" id="ost"></div><div class="qa"><button class="qbtn" data-q="req">طلب جديد</button><button class="qbtn" data-q="leave">نموذج إجازة</button></div></div></div>' +
       '<div class="ochips" id="ochips"></div>' +
       '<div hidden><div class="dk" id="dk"></div><div class="card" id="ddv"></div><div class="card dmo" id="dmo"></div><div class="card" id="dox"></div><div class="dnav" id="dnav"></div><div class="ob" id="obento"></div></div>';
@@ -2721,6 +2779,7 @@ function brRender_() {
     var ck = function (o, l, key) { if (!o || o.ok === null || o.ok === undefined || (!o.ok && (o[key] === null || o[key] === undefined))) return '<span class="na">' + l + ' —</span>'; return '<span class="' + (o.ok ? 'ok' : 'no') + '">' + l + ' ' + (o.ok ? '✓' : (o[key] > 0 ? '+' : '') + n2(o[key])) + '</span>'; };
     var has = b.net !== null && b.net !== undefined, o2 = fx.by[b.name], nv = function (v) { return v === null || v === undefined ? '—' : n2(v); };
     return '<div class="card brc"><div class="bn"><b>' + esc(b.name) + '</b><span class="st" style="' + st[0] + '">' + esc(b.stateText || st[1]) + '</span></div>' +
+      (function () { var tw = 0, pw = 0, cw = 0, cp2 = 0; dates.slice(-7).forEach(function (k) { if (h[k] && h[k][b.name] !== undefined) { tw += h[k][b.name]; cw++; } }); dates.slice(-14, -7).forEach(function (k) { if (h[k] && h[k][b.name] !== undefined) { pw += h[k][b.name]; cp2++; } }); if (cw < 5 || cp2 < 5 || !pw) return ''; var p = Math.round((tw / pw - 1) * 100); return '<div class="brwk ' + (p <= -15 ? 'dn' : (p >= 10 ? 'up' : '')) + '">هذا الأسبوع ' + n2(Math.round(tw)) + ' · اللي قبله ' + n2(Math.round(pw)) + ' <b>' + (p >= 0 ? '↑ ' : '↓ ') + Math.abs(p) + '%</b>' + (p <= -15 ? ' — تواصل مع الفرع' : '') + '</div>'; })() +
       '<div class="bv">' + (has ? n2(b.net) + ' <small>ر.س صافي</small>' : (o2 ? n2(o2.v) + ' <small>ر.س من أونكس — الإقفال ناقص</small>' : '— <small>الإقفال ناقص، وما ترحّلت مبيعاته في أونكس</small>')) + '</div>' + bars + tgLine_(b.name, vals.reduce(function (a, v) { return a + (v || 0); }, 0)) +
       '<div class="brmx"><div><small>نقد</small><b>' + nv(b.cash) + '</b></div><div><small>شبكة</small><b>' + nv(b.card) + '</b></div><div><small>آجل</small><b>' + nv(b.credit) + '</b></div></div>' +
       '<div class="brck">' + ck(b.mada, 'مدى', 'gap') + ck(b.drawer, 'الدرج', 'diff') + (b.returns ? '<span class="no">رجيع ' + n2(b.returns.value || b.returns.amount || 0) + '</span>' : '<span class="ok">بدون رجيع</span>') + (b.invoices !== undefined && b.invoices !== null ? '<span class="na">فواتير ' + b.invoices + '</span>' : (o2 ? '<span class="na">فواتير ' + o2.bills + ' في أونكس</span>' : '')) + '</div></div>';
