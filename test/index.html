@@ -608,7 +608,7 @@ body[data-tab=tasks] .kpi:nth-child(4){background:#E7F5EC}body[data-tab=tasks] .
 .tag.n{background:#EEF0F3;color:var(--mu)}
 .pxg{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pxh{font-size:13.5px;color:var(--gd3);margin:2px 0 4px}
 @media(max-width:700px){.pxg{grid-template-columns:1fr}}
-.ccq-h{flex-wrap:wrap}.ccq-st{order:3;flex:0 0 auto;margin:2px 0 0!important;max-width:100%!important}.ccq-h b{flex:1;min-width:0}
+.ccq-st{align-self:flex-start;margin:0!important;max-width:100%!important}.ccq-h b{flex:1;min-width:0}
 </style>
 </head>
 <body><style>.side{top:26px!important}</style><div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#B42318;color:#fff;text-align:center;font:700 13px Tahoma,sans-serif;padding:4px">نسخة تجربة — البيانات منسوخة والإرسال موقوف، أي تعديل هنا ما يأثر على النظام الحقيقي</div>
@@ -2680,7 +2680,7 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   if (can('oxr')) { var XI = ox0 ? oxIssues_().filter(function (x) { return x.lv !== 'n'; }) : null, xr = XI ? XI.filter(function (x) { return x.lv === 'r'; }).length : 0;
     T.push({go: 'oxr', ic: 'scale', n: 'تشغيل أونكس', v: XI ? XI.length : '…', u: 'مشكلة تحتاج مراجعة', sub: XI && XI.length ? XI[0].t : 'الميزان والصناديق والترحيل', s: !XI ? st('n', '…') : (oxOld_(ox0) ? st('n', 'النسخة قديمة') : (xr ? st('r', xr + ' عاجلة') : (XI.length ? st('a', 'راجعها') : st('g', 'كل الفحوصات سليمة')))), f: ox0 ? 'نسخة ' + dayLabel(ox0.date) : ''}); }
   var LB = {g: 'سليم', a: 'انتبه', r: 'عاجل', n: 'ينتظر بيانات'};
-  pb.innerHTML = T.map(function (x) { return '<button type="button" class="ccq ' + x.s.c + (x.stale ? ' old' : '') + '" data-go="' + x.go + '"><span class="ccq-h"><span class="ccq-i">' + I(x.ic, 18, 2) + '</span><b>' + x.n + '</b><span class="ccq-st" title="' + LB[x.s.c] + '"><i></i>' + esc(x.s.t) + '</span></span><span class="ccq-v">' + x.v + '<small>' + x.u + '</small></span><span class="ccq-sub">' + esc(x.sub) + '</span>' + (x.f ? '<span class="ccq-f">' + I('cal', 11) + esc(x.f) + '</span>' : '') + '</button>'; }).join('');
+  pb.innerHTML = T.map(function (x) { return '<button type="button" class="ccq ' + x.s.c + (x.stale ? ' old' : '') + '" data-go="' + x.go + '"><span class="ccq-h"><span class="ccq-i">' + I(x.ic, 18, 2) + '</span><b>' + x.n + '</b></span><span class="ccq-st" title="' + LB[x.s.c] + '"><i></i>' + esc(x.s.t) + '</span><span class="ccq-v">' + x.v + '<small>' + x.u + '</small></span><span class="ccq-sub">' + esc(x.sub) + '</span>' + (x.f ? '<span class="ccq-f">' + I('cal', 11) + esc(x.f) + '</span>' : '') + '</button>'; }).join('');
   Array.prototype.forEach.call(pb.querySelectorAll('[data-go]'), function (a) { a.onclick = function () { if (a.dataset.go === 'offices') S.ot = 'dec'; go(a.dataset.go); }; });
 }
 function dMonth_() {
