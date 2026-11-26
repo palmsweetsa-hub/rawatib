@@ -1468,11 +1468,13 @@ function crOnyx_() {
   var list = (d.customers || []).filter(function (c) {
     if (q && (c.name + ' ' + c.no + ' ' + c.repName).indexOf(q) < 0) return false;
     if (f === 'all') return c.bal > 0;
+    if (f === 'plat') return c.bal > 0 && /^500/.test(c.no);
+    if (f === 'trade') return c.bal > 0 && !/^500/.test(c.no);
     if (f === 'credit') return c.bal < 0;
     if (f === 'norcpt') return c.bal > 0 && !c.rcpt30;
     return (c[f] || 0) > 0;
-  }).sort(function (a, b) { return f === 'all' || f === 'credit' || f === 'norcpt' ? Math.abs(b.bal) - Math.abs(a.bal) : (b[f] || 0) - (a[f] || 0); });
-  var chips = crChips_('oxf', [['all', 'الكل'], ['a90p', 'أكثر من ٩٠'], ['a90', '٦١–٩٠'], ['a60', '٣١–٦٠'], ['norcpt', 'ما سدد ٣٠ يوم'], ['credit', 'دائن']]);
+  }).sort(function (a, b) { return f === 'all' || f === 'plat' || f === 'trade' || f === 'credit' || f === 'norcpt' ? Math.abs(b.bal) - Math.abs(a.bal) : (b[f] || 0) - (a[f] || 0); });
+  var chips = crChips_('oxf', [['all', 'الكل'], ['trade', 'عملاء الجملة'], ['plat', 'المنصات والدفع الآجل'], ['a90p', 'أكثر من ٩٠'], ['a90', '٦١–٩٠'], ['a60', '٣١–٦٠'], ['norcpt', 'ما سدد ٣٠ يوم'], ['credit', 'دائن']]);
   var srch = '<input type="search" id="oxq" placeholder="ابحث باسم العميل أو رقمه أو المندوب" value="' + esc(q) + '" style="margin:0 0 10px">';
   var rows = list.map(function (c) {
     var red = c.a90p > 0, lim = c.limit > 0 && c.bal > c.limit;
@@ -1499,13 +1501,13 @@ function vReps() {
       '<div class="bx"><small>نقد وبنك عند المناديب</small><b>' + n2(sum('cash') + sum('bank')) + ' <span>ر.س</span></b></div></div>';
     var cards = reps.map(function (r) {
       var rp = oxPct_(r.retMonth, r.salesMonth), boxOld = r.lastBox && r.lastBox < d.date && (r.cash || r.bank);
-      var line = function (l, v, st) { return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #EEF0F3"><span class="muted">' + l + '</span><b' + (st ? ' style="' + st + '"' : '') + '>' + v + '</b></div>'; };
-      return '<div class="card"><div class="row" style="border:0;padding:0 0 8px"><span class="av">' + ini(r.name) + '</span><div class="rx" style="flex:1"><b>' + esc(r.name) + '</b><small>رمز ' + esc(r.code) + (r.lastBox ? ' · آخر حركة صندوق ' + dayLabel(r.lastBox) : '') + '</small></div>' +
+      var line = function (l, v, st, sub) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #EEF0F3"><span class="muted">' + l + (sub ? '<small style="display:block;font-size:11.5px">' + sub + '</small>' : '') + '</span><b' + (st ? ' style="' + st + '"' : '') + '>' + v + '</b></div>'; };
+      return '<div class="card"><div class="row" style="border:0;padding:0 0 8px"><span class="av">' + ini(r.name.replace(/^المندوب\s*/, '')) + '</span><div class="rx" style="flex:1"><b>' + esc(r.name) + '</b><small>رمز ' + esc(r.code) + (r.lastBox ? ' · آخر حركة صندوق ' + dayLabel(r.lastBox) : '') + '</small></div>' +
         (rp >= 10 ? '<span class="st" style="background:var(--r2);color:var(--r)">مردودات ' + rp + '%</span>' : '') + '</div>' +
-        line('مبيعات أمس', n2(r.salesDay)) + line('مبيعات الشهر', n2(r.salesMonth) + ' <small class="muted">· ' + r.billsMonth + ' فاتورة</small>') +
-        line('مردودات الشهر', n2(r.retMonth) + ' <small class="muted">· ' + r.retCount + ' مردود · ' + rp + '%</small>', rp >= 10 ? 'color:var(--r)' : '') +
+        line('مبيعات أمس', n2(r.salesDay)) + line('مبيعات الشهر', n2(r.salesMonth), '', r.billsMonth + ' فاتورة') +
+        line('مردودات الشهر', n2(r.retMonth), rp >= 10 ? 'color:var(--r)' : '', r.retCount + ' مردود · ' + rp + '% من المبيعات') +
         line('تحصيل الشهر', n2(r.collMonth)) + line('رصيد الصندوق', n2(r.cash), r.cash < 0 ? 'color:var(--r)' : '') + line('رصيد البنك', n2(r.bank), r.bank < 0 ? 'color:var(--r)' : '') +
-        (r.custCount ? line('عملاؤه عليهم', n2(r.custBal) + ' <small class="muted">· ' + r.custCount + ' عميل</small>') : '') +
+        (r.custCount ? line('عملاؤه عليهم', n2(r.custBal), '', r.custCount + ' عميل') : '') +
         (boxOld ? '<p class="muted" style="font-size:12px;margin:8px 0 0;color:var(--a)">فيه رصيد عند المندوب وآخر حركة صندوق قبل ' + dayLabel(d.date) + ' — تأكد من التوريد.</p>' : '') + '</div>';
     }).join('');
     $('view').innerHTML = ph('حسابات المناديب', 'من أول الشهر حتى ' + dayLabel(d.date, true)) + oxNote_(d) + bento + '<div class="brg">' + (cards || OX_EMPTY('ما فيه حركة مناديب هذا الشهر.')) + '</div>' +
@@ -1521,26 +1523,29 @@ function vProfit() {
     var d = C.onyx; if (S.tab !== tab) return;
     if (!d || d.none) { $('view').innerHTML = ph('ربحية المنتجات', 'آخر ٩٠ يوم') + OX_EMPTY(); return; }
     var all = d.profit || [], f = S.pff || 'top', q = S.pfq || '';
-    var ok = all.filter(function (p) { return !p.note; }), sales = ok.reduce(function (s, p) { return s + p.sales; }, 0), prof = ok.reduce(function (s, p) { return s + p.profit; }, 0);
-    var weak = all.filter(function (p) { return !p.note && p.margin < 30; }), bad = all.filter(function (p) { return p.note; }), loss = all.filter(function (p) { return !p.note && p.profit < 0; });
-    var bento = '<div class="bento"><button class="bx gold" data-pff="top"><small>صافي مبيعات ٩٠ يوم</small><b>' + n2(Math.round(sales)) + ' <span>ر.س</span></b></button>' +
+    var cat = function (p) { return !p.note ? 'ok' : (/^ما انباع/.test(p.note) ? 'unsold' : (/^بدون وصفة/.test(p.note) ? 'norec' : 'review')); };
+    var by = {ok: [], unsold: [], norec: [], review: []}; all.forEach(function (p) { by[cat(p)].push(p); });
+    var ok = by.ok, sales = ok.reduce(function (s, p) { return s + p.sales; }, 0), prof = ok.reduce(function (s, p) { return s + p.profit; }, 0);
+    var weak = ok.filter(function (p) { return p.margin < 30; }), loss = ok.filter(function (p) { return p.profit < 0; });
+    var bento = '<div class="bento"><button class="bx gold" data-pff="top"><small>مبيعات ٩٠ يوم (منتجات لها وصفة)</small><b>' + n2(Math.round(sales)) + ' <span>ر.س</span></b></button>' +
       '<button class="bx" data-pff="top"><small>متوسط الهامش</small><b>' + oxPct_(prof, sales) + '<span>%</span></b></button>' +
       '<button class="bx" data-pff="weak"><small>هامش أقل من ٣٠٪</small><b' + (weak.length ? ' style="color:var(--a)"' : '') + '>' + weak.length + ' <span>منتج</span></b></button>' +
-      '<button class="bx" data-pff="bad"><small>وصفة تحتاج مراجعة</small><b' + (bad.length ? ' style="color:var(--r)"' : '') + '>' + bad.length + ' <span>منتج</span></b></button></div>';
-    var list = (f === 'weak' ? weak : f === 'bad' ? bad : f === 'loss' ? loss : f === 'low' ? ok.slice() : ok.slice())
+      '<button class="bx" data-pff="review"><small>وصفة أو وحدة غلط</small><b' + (by.review.length ? ' style="color:var(--r)"' : '') + '>' + by.review.length + ' <span>منتج</span></b></button></div>' +
+      '<p class="muted" style="font-size:12.5px;margin:-4px 0 12px">' + by.norec.length + ' منتج انباع بدون وصفة في أونكس، و' + by.unsold.length + ' منتج ما انباع آخر ٩٠ يوم — تلقاهم في الفلاتر تحت.</p>';
+    var list = (f === 'weak' ? weak : f === 'loss' ? loss : f === 'review' ? by.review : f === 'norec' ? by.norec : f === 'unsold' ? by.unsold : ok.slice())
       .filter(function (p) { return !q || (p.name + ' ' + p.code).indexOf(q) >= 0; })
-      .sort(function (a, b) { return f === 'weak' || f === 'low' ? a.margin - b.margin : (f === 'bad' ? b.sales - a.sales : b.profit - a.profit); }).slice(0, 150);
-    var chips = crChips_('pff', [['top', 'الأعلى ربحاً'], ['low', 'الأقل هامشاً'], ['weak', 'هامش ضعيف'], ['loss', 'خسارة'], ['bad', 'تحتاج مراجعة']]);
+      .sort(function (a, b) { return f === 'weak' || f === 'low' ? a.margin - b.margin : (f === 'review' || f === 'norec' ? b.sales - a.sales : (f === 'unsold' ? a.name.localeCompare(b.name) : b.profit - a.profit)); }).slice(0, 200);
+    var chips = crChips_('pff', [['top', 'الأعلى ربحاً'], ['low', 'الأقل هامشاً'], ['weak', 'هامش ضعيف'], ['loss', 'خسارة'], ['review', 'وصفة غلط'], ['norec', 'بدون وصفة'], ['unsold', 'ما انباع']]);
     var rows = list.map(function (p) {
-      var col = p.note ? 'var(--mu)' : (p.margin < 0 ? 'var(--r)' : (p.margin < 30 ? 'var(--a)' : 'var(--g)'));
+      var bad = cat(p) !== 'ok', col = bad ? 'var(--mu)' : (p.margin < 0 ? 'var(--r)' : (p.margin < 30 ? 'var(--a)' : 'var(--g)'));
       return '<tr><td><b>' + esc(p.name) + '</b><br><small class="muted">' + esc(p.code) + (p.note ? ' · <span style="color:var(--r)">' + esc(p.note) + '</span>' : '') + '</small></td>' +
         '<td>' + n2(p.qty) + '</td><td>' + n2(p.price) + '</td><td>' + n2(p.recipeCost) + '<br><small class="muted">أونكس ' + n2(p.onyxCost) + '</small></td>' +
-        '<td><b style="color:' + col + '">' + (p.note ? '—' : p.margin + '%') + '</b></td><td>' + n2(Math.round(p.sales)) + '</td><td><b>' + (p.note ? '—' : n2(Math.round(p.profit))) + '</b></td></tr>';
+        '<td><b style="color:' + col + '">' + (bad ? '—' : p.margin + '%') + '</b></td><td>' + n2(Math.round(p.sales)) + '</td><td><b>' + (bad ? '—' : n2(Math.round(p.profit))) + '</b></td></tr>';
     }).join('');
     $('view').innerHTML = ph('ربحية المنتجات', 'آخر ٩٠ يوم حتى ' + dayLabel(d.date, true)) + oxNote_(d) + bento +
       '<div class="card">' + chips + '<input type="search" id="pfq" placeholder="ابحث باسم المنتج أو رمزه" value="' + esc(q) + '" style="margin:0 0 10px">' +
       '<div class="scroll"><table><tr><th>المنتج</th><th>الكمية</th><th>متوسط السعر</th><th>تكلفة الوصفة</th><th>الهامش</th><th>المبيعات</th><th>الربح التقديري</th></tr>' + (rows || '<tr><td colspan="7" class="muted">ما فيه منتجات بهذا الفلتر</td></tr>') + '</table></div>' +
-      '<p class="muted" style="font-size:12px;margin:8px 0 0">الهامش = (متوسط سعر البيع − تكلفة الوصفة) ÷ السعر، والتكلفة من وصفات أونكس بأسعار الخامات الحالية. «تحتاج مراجعة» يعني الهامش غير منطقي، وغالباً الوصفة أو وحدة البيع غلط في أونكس.</p></div>';
+      '<p class="muted" style="font-size:12px;margin:8px 0 0">الهامش = (متوسط سعر البيع − تكلفة الوصفة) ÷ السعر، والتكلفة من وصفات أونكس بأسعار الخامات الحالية. «وصفة غلط» يعني الهامش غير منطقي أو البيع تحت التكلفة بفرق كبير، وغالباً كمية في الوصفة أو وحدة البيع غلط في أونكس. «بدون وصفة» تكلفته من متوسط أونكس، فما يدخل في المتوسط.</p></div>';
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-pff]'), function (b) { b.onclick = function () { S.pff = b.dataset.pff; draw(); }; });
     var qi = $('pfq'); if (qi) qi.oninput = function () { S.pfq = qi.value.trim(); clearTimeout(S.pfT); S.pfT = setTimeout(function () { draw(); var x = $('pfq'); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 350); };
   };
@@ -1557,8 +1562,8 @@ function oxDash_() {
     var y = d.day || {sales: 0, returns: 0, coll: 0, bills: 0, by: []}, tr = (d.trend || []).filter(function (x) { return x.date < d.date; }).slice(-7);
     var avg = function (k) { return tr.length ? tr.reduce(function (s, x) { return s + (x[k] || 0); }, 0) / tr.length : 0; };
     var cmp = function (v, k) { var a = avg(k); if (!a) return ''; var p = Math.round((v - a) / a * 100); return '<small style="color:' + (p >= 0 ? 'var(--g)' : 'var(--r)') + '">' + (p >= 0 ? '+' : '') + p + '% عن متوسط ٧ أيام</small>'; };
-    var t = d.custTotals || {}, st = (d.posting || []).filter(function (p) { return p.state && p.state !== 'محدّث'; });
-    var by = (y.by || []).filter(function (w) { return w.sales || w.returns; }).sort(function (a, c) { return c.sales - a.sales; }).map(function (w) { return '<span class="st" style="background:#EEF0F3;color:var(--ink)">' + esc(w.name.replace(/^مخزن /, '')) + ' ' + n2(w.sales) + (w.returns ? ' · مردود ' + n2(w.returns) : '') + '</span>'; }).join('');
+    var t = d.custTotals || {}, st = (d.posting || []).filter(function (p) { return p.type === 'مبيعات' && p.state && p.state !== 'محدّث' && !/مهد/.test(p.branch); });
+    var by = (y.by || []).filter(function (w) { return w.sales || w.returns; }).sort(function (a, c) { return c.sales - a.sales; }).map(function (w) { return '<span class="st" style="background:#EEF0F3;color:var(--ink)">' + esc(w.name.replace(/^مخزن /, '')) + ' ' + (w.sales ? n2(w.sales) : '') + (w.returns ? (w.sales ? ' · ' : '') + 'مردود ' + n2(w.returns) : '') + '</span>'; }).join('');
     b.innerHTML = '<div class="sec-h"><h2>' + dayLabel(d.date, true) + ' من أونكس</h2><span class="muted" style="font-size:12.5px">' + (oxOld_(d) ? '<b style="color:var(--r)">بيانات قديمة</b>' : 'نسخة القراءة الليلية') + '</span></div>' +
       '<div class="bento"><button class="bx gold" data-oxg="reps"><small>المبيعات المسجلة في أونكس</small><b>' + n2(y.sales) + ' <span>ر.س · ' + y.bills + ' فاتورة</span></b>' + cmp(y.sales, 'sales') + '</button>' +
       '<button class="bx" data-oxg="reps"><small>المردودات</small><b>' + n2(y.returns) + ' <span>' + oxPct_(y.returns, y.sales) + '%</span></b></button>' +
