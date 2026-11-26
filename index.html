@@ -707,15 +707,15 @@ function showLogin(err) {
     call('login', lu, $('lp').value, devGet_(lu)).then(function (r) { wipe_(); if (r.dev) devSet_(r.u, r.dev); S.t = r.token; save(r.token); S.iat = S.seen = Date.now(); start(r.boot); }).catch(function (e) { busy(b, false); msg('lm', e.message); });
   };
 }
-var TAB = {dash: ['الملخص', 'home'], tasks: ['المهام', 'tasks'], branches: ['الفروع', 'store'], credit: ['الآجل والتحصيل', 'card'], delivery: ['التوصيل', 'bike'], dvt: ['المتابعة والاعتراضات', 'flag'], dvp: ['الأسعار والعروض', 'tag'], dvr: ['الربح والمرتجعات', 'chart'], dvc: ['المنصات والعقود', 'doc'], offices: ['المكاتب', 'office'], sys: ['النظام', 'sliders'], emps: ['الموظفين', 'users'], vlist: ['السندات', 'receipt'], vnew: ['سند جديد', 'plus'], req: ['الطلبات', 'doc'], leave: ['الإجازات', 'leave'], pay: ['المسير', 'cal'], rec: ['المطابقة', 'scale'], set: ['الإعدادات', 'gear'], me: ['رمزي', 'lock']};
+var TAB = {dash: ['الملخص', 'home'], tasks: ['المهام', 'tasks'], branches: ['الفروع', 'store'], credit: ['الآجل والتحصيل', 'card'], reps: ['حسابات المناديب', 'users'], profit: ['ربحية المنتجات', 'chart'], delivery: ['التوصيل', 'bike'], dvt: ['المتابعة والاعتراضات', 'flag'], dvp: ['الأسعار والعروض', 'tag'], dvr: ['الربح والمرتجعات', 'chart'], dvc: ['المنصات والعقود', 'doc'], offices: ['المكاتب', 'office'], sys: ['النظام', 'sliders'], emps: ['الموظفين', 'users'], vlist: ['السندات', 'receipt'], vnew: ['سند جديد', 'plus'], req: ['الطلبات', 'doc'], leave: ['الإجازات', 'leave'], pay: ['المسير', 'cal'], rec: ['المطابقة', 'scale'], set: ['الإعدادات', 'gear'], me: ['رمزي', 'lock']};
 function tabName(t) { return t === 'vlist' && S.me && S.me.role === 'store' ? 'سنداتي' : TAB[t][0]; }
 function start(pre) {
   $('app').innerHTML = '<div class="wrap">' + skel() + '</div>';
   (pre ? Promise.resolve(pre) : call('boot', S.t)).then(function (b) {
     S.me = b; S.emps = b.emps; S.months = b.months;
     S.main = b.role === 'store' ? ['tasks', 'vlist'] : ['dash', 'tasks', 'vlist', 'emps'];
-    S.more = b.role === 'store' ? ['me'] : (b.role === 'acc' ? ['credit', 'delivery', 'pay', 'rec', 'req', 'leave', 'me'] : ['branches', 'offices', 'credit', 'delivery', 'pay', 'rec', 'req', 'leave', 'sys', 'set']);
-    S.side = b.role === 'owner' ? ['dash', 'tasks', 'branches', 'offices', 'credit', 'vlist', 'pay', 'rec'].concat(DVK, ['emps', 'req', 'leave', 'sys', 'set']) : (b.role === 'acc' ? ['dash', 'tasks', 'credit', 'vlist', 'pay', 'rec'].concat(DVK, ['emps', 'req', 'leave', 'me']) : S.main.concat(S.more).concat(DVK));
+    S.more = b.role === 'store' ? ['me'] : (b.role === 'acc' ? ['credit', 'reps', 'profit', 'delivery', 'pay', 'rec', 'req', 'leave', 'me'] : ['branches', 'offices', 'credit', 'reps', 'profit', 'delivery', 'pay', 'rec', 'req', 'leave', 'sys', 'set']);
+    S.side = b.role === 'owner' ? ['dash', 'tasks', 'branches', 'offices', 'credit', 'reps', 'profit', 'vlist', 'pay', 'rec'].concat(DVK, ['emps', 'req', 'leave', 'sys', 'set']) : (b.role === 'acc' ? ['dash', 'tasks', 'credit', 'reps', 'profit', 'vlist', 'pay', 'rec'].concat(DVK, ['emps', 'req', 'leave', 'me']) : S.main.concat(S.more).concat(DVK));
     S.canNew = b.role !== 'owner';
     if (b.role !== 'owner') { var pm = Array.isArray(b.perms) ? b.perms : [], okT = function (x) { return x === 'me' || x === 'tasks' || pm.indexOf(x) >= 0; }; S.main = S.main.filter(okT); S.more = S.more.filter(okT); S.side = S.side.filter(okT); S.canNew = pm.indexOf('vnew') >= 0; }
     S.boot = b;
@@ -799,7 +799,7 @@ function go(t, arg) {
   S.tab = t; document.body.dataset.tab = t; markNav();
   $('view').innerHTML = skel();
   if (DVK.indexOf(t) >= 0 && !DVL.ok) { dvLoad_().then(function (ok) { if (ok && S.tab === t) go(t, arg); }, function (e) { if (S.tab === t) fail(e); }); return; }
-  ({tasks: vTasks, branches: vBranches, credit: vCredit, delivery: vDelivery, dvt: vDvT, dvp: vDvP, dvr: vDvR, dvc: vDvC, offices: vOffices, sys: vSys, dash: vDash, emps: vEmps, vnew: vNew, vlist: vList, req: vReq, leave: vLeave, pay: vPay, rec: vRec, set: vSet, me: vMe})[t](arg);
+  ({tasks: vTasks, branches: vBranches, credit: vCredit, reps: vReps, profit: vProfit, delivery: vDelivery, dvt: vDvT, dvp: vDvP, dvr: vDvR, dvc: vDvC, offices: vOffices, sys: vSys, dash: vDash, emps: vEmps, vnew: vNew, vlist: vList, req: vReq, leave: vLeave, pay: vPay, rec: vRec, set: vSet, me: vMe})[t](arg);
   window.scrollTo(0, 0);
 }
 function fail(e) { $('view').innerHTML = '<div class="card">' + empty('alert', 'ما قدرت أجيب البيانات', esc(e.message)).replace('class="empty"', 'class="empty err"') + '<button class="btn l" onclick="go(S.tab)">إعادة المحاولة</button></div>'; }
@@ -1300,7 +1300,7 @@ function vDvC() {
 function waNum_(p) { p = String(p || '').replace(/\D/g, ''); if (/^05\d{8}$/.test(p)) return '966' + p.slice(1); if (/^5\d{8}$/.test(p)) return '966' + p; return p; }
 function crState_(x) { return x.signed ? (x.noteOk ? ['مكتمل', 'background:var(--g2);color:var(--g)'] : ['وقّع — بانتظار السند', 'background:var(--a2);color:var(--a)']) : (x.opened ? ['فتح الرابط وما وقّع', 'background:var(--b2);color:var(--b)'] : ['ما فتح الرابط', 'background:var(--r2);color:var(--r)']); }
 function crSeg_() {
-  return '<div class="seg" role="tablist" aria-label="أقسام الآجل" style="margin-bottom:12px;flex-wrap:nowrap;gap:6px">' + [['cust', 'العملاء'], ['case', 'القضايا'], ['prom', 'وعود السداد'], ['sign', 'التوقيعات']].map(function (o) { return '<button type="button" role="tab" aria-selected="' + (S.ct === o[0]) + '" class="' + (S.ct === o[0] ? 'on' : '') + '" style="min-width:0;padding:8px 4px;font-size:13.5px" data-ct="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>';
+  return '<div class="seg" role="tablist" aria-label="أقسام الآجل" style="margin-bottom:12px;flex-wrap:nowrap;gap:6px">' + [['cust', 'العملاء'], ['onyx', 'أعمار الديون'], ['case', 'القضايا'], ['prom', 'وعود السداد'], ['sign', 'التوقيعات']].map(function (o) { return '<button type="button" role="tab" aria-selected="' + (S.ct === o[0]) + '" class="' + (S.ct === o[0] ? 'on' : '') + '" style="min-width:0;padding:8px 4px;font-size:13.5px" data-ct="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>';
 }
 function crChips_(key, opts) { return '<div class="chips" role="tablist">' + opts.map(function (o) { return '<button type="button" role="tab" aria-selected="' + (S[key] === o[0]) + '" class="' + (S[key] === o[0] ? 'on' : '') + '" data-' + key + '="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
 function crCust_(d, sg) {
@@ -1410,6 +1410,8 @@ function promSet_(r, st) {
 }
 function crRender_() {
   var d = C.coll, g = C.credit; if (!d || !g) return;
+  var ox = C.onyx && !C.onyx.none && C.onyx.customers ? C.onyx : null;
+  if (ox) { var om = {}; ox.customers.forEach(function (c) { om[String(c.no)] = c; }); d.custs.forEach(function (x) { if (x.balSheet === undefined) { x.balSheet = x.bal; x.balAtSheet = x.balAt; } var o = om[String(x.no)]; x.bal = o ? o.bal : 0; x.balAt = ox.date; x.a90p = o ? o.a90p : 0; if (o && o.lastRcpt && (!x.lastPay || o.lastRcpt > x.lastPay)) x.lastPay = o.lastRcpt; }); }
   var sg = {}; g.list.forEach(function (x) { sg[String(x.no)] = x; });
   var tol = 1.1, bal = 0, over = 0, act = 0, actAmt = 0, at = '';
   d.custs.forEach(function (x) { bal += x.bal; if (x.limit && x.bal > x.limit * tol) over++; if (x.balAt > at) at = x.balAt; });
@@ -1419,20 +1421,166 @@ function crRender_() {
     '<button class="bx" data-ct="cust" data-cf2="over"><small>فوق الحد الائتماني</small><b' + (over ? ' style="color:var(--r)"' : '') + '>' + over + ' <span>من ' + d.custs.length + '</span></b></button>' +
     '<button class="bx" data-ct="case"><small>قضايا فعّالة</small><b>' + act + ' <span>· ' + n2(actAmt) + ' ر.س</span></b></button>' +
     '<button class="bx" data-ct="sign"><small>وقّعوا الاتفاقية</small><b>' + d.custs.filter(function (x) { var s = sg[String(x.no)]; return s && s.signed; }).length + ' <span>من ' + d.custs.length + '</span></b></button></div>';
-  var stale = '<div class="dec"><div style="flex:1"><small>تنبيه</small><b>الأرصدة من آخر كشف أونكس بتاريخ ' + (at ? dayLabel(at) : '—') + '، وتتحدّث أول ما يوصل كشف أعمار الديون الجديد على إيميل المصنع.</b></div></div>';
-  var body = {cust: function () { return crCust_(d, sg); }, 'case': function () { return crCase_(d); }, prom: function () { return crProm_(d); }, sign: function () { return crSign_(g); }}[S.ct]();
+  var stale = ox ? oxNote_(ox) : '<div class="dec"><div style="flex:1"><small>تنبيه</small><b>الأرصدة من آخر كشف أونكس بتاريخ ' + (at ? dayLabel(at) : '—') + '، وتتحدّث أول ما يوصل كشف أعمار الديون الجديد على إيميل المصنع.</b></div></div>';
+  var body = {cust: function () { return crCust_(d, sg); }, 'case': function () { return crCase_(d); }, prom: function () { return crProm_(d); }, sign: function () { return crSign_(g); }, onyx: function () { return crOnyx_(); }}[S.ct]();
+  if (S.ct === 'onyx') stale = oxNote_(C.onyx);
   $('view').innerHTML = ph('الآجل والتحصيل', 'يشغّله مراقب المشتريات والتحصيل · أنت تعتمد') + bento + stale + crSeg_() + body;
   Array.prototype.forEach.call(document.querySelectorAll('#view [data-ct]'), function (b) { b.onclick = function () { S.ct = b.dataset.ct; if (b.dataset.cf2) S.cf2 = b.dataset.cf2; crRender_(); }; });
   Array.prototype.forEach.call(document.querySelectorAll('#view [data-pm]'), function (b) { b.onclick = function () { promModal_(b.dataset.pm); }; });
   Array.prototype.forEach.call(document.querySelectorAll('#view [data-fol]'), function (b) { b.onclick = function () { folModal_(b.dataset.fol); }; });
   Array.prototype.forEach.call(document.querySelectorAll('#view [data-ps]'), function (b) { b.onclick = function () { promSet_(b.dataset.ps, b.dataset.pv); }; });
   ['cf', 'cf2', 'cf3'].forEach(function (k) { Array.prototype.forEach.call(document.querySelectorAll('#view .chips [data-' + k + ']'), function (b) { b.onclick = function () { S[k] = b.dataset[k]; crRender_(); }; }); });
+  Array.prototype.forEach.call(document.querySelectorAll('#view [data-oxf]'), function (b) { b.onclick = function () { S.oxf = b.dataset.oxf; crRender_(); }; });
+  var oq = $('oxq'); if (oq) oq.oninput = function () { S.oxq = oq.value.trim(); clearTimeout(S.oxT); S.oxT = setTimeout(function () { crRender_(); var x = $('oxq'); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 350); };
 }
+// ===== بيانات أونكس اليومية (من نسخة القراءة الليلية، قراءة فقط): أعمار الديون، حسابات المناديب، ملخص أمس، ربحية المنتجات =====
+function oxGet_(force) {
+  if (C.onyx && !force && S.oxAt && Date.now() - S.oxAt < 600000) return Promise.resolve(C.onyx);
+  S.oxAt = Date.now();
+  return call('onyxBoard', S.t).then(function (d) { C.onyx = d; return d; }, function (e) { S.oxAt = 0; throw e; });
+}
+function oxOld_(d) { if (!d || !d.date) return true; var y = new Date(); y.setDate(y.getDate() - 1); return d.date < isoD_(y); }
+function oxNote_(d) {
+  if (!d || d.none) return '<div class="dec"><div style="flex:1"><small>بيانات أونكس</small><b>ما وصل ملف أونكس الليلي بعد. ينزل تلقائياً كل ليلة بعد سحب النسخة الساعة ٢.</b></div></div>';
+  var old = oxOld_(d), miss = (d.missing || []).length;
+  return '<div class="dec' + (old ? ' red' : '') + '"><div style="flex:1"><small>من نسخة أونكس الليلية · قراءة فقط</small><b>بيانات يوم ' + dayLabel(d.date, true) + (old ? ' — أقدم من أمس، تأكد إن التشغيل الليلي اشتغل' : '') + (miss ? ' · ناقص: ' + esc(d.missing.join('، ')) : '') + '</b></div></div>';
+}
+var OX_EMPTY = function (t) { return '<div class="card">' + empty('doc', 'ما وصلت بيانات أونكس بعد', t || 'تنزل هنا تلقائياً كل ليلة من نسخة أونكس للقراءة.') + '</div>'; };
+function oxPct_(a, b) { return b ? Math.round(a / b * 100) : 0; }
+function oxBar_(parts) {
+  var tot = parts.reduce(function (s, p) { return s + Math.max(0, p[0]); }, 0) || 1;
+  return '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#EEF0F3">' + parts.map(function (p) { var w = Math.max(0, p[0]) / tot * 100; return w ? '<i style="width:' + w.toFixed(1) + '%;background:' + p[1] + '"></i>' : ''; }).join('') + '</div>';
+}
+var OX_AG = [['a30', 'حتى ٣٠ يوم', 'var(--g)'], ['a60', '٣١–٦٠ يوم', '#C9A227'], ['a90', '٦١–٩٠ يوم', 'var(--a)'], ['a90p', 'أكثر من ٩٠', 'var(--r)']];
+
+// ── تبويب «أعمار الديون» داخل الآجل والتحصيل ──
+function crOnyx_() {
+  var d = C.onyx;
+  if (!d) { oxGet_().then(function () { if (S.tab === 'credit' && S.ct === 'onyx') crRender_(); }, function (e) { if (S.tab === 'credit' && S.ct === 'onyx') toast('ما قدرت أجيب بيانات أونكس — ' + e.message); }); return '<div class="card">' + skel() + '</div>'; }
+  if (d.none) return OX_EMPTY();
+  var t = d.custTotals || {}, f = S.oxf || 'all', q = S.oxq || '';
+  var head = '<div class="bento">' + OX_AG.map(function (a) { return '<button class="bx" data-oxf="' + a[0] + '"><small>' + a[1] + '</small><b style="color:' + a[2] + '">' + n2(t[a[0]] || 0) + ' <span>' + oxPct_(t[a[0]] || 0, t.bal) + '%</span></b></button>'; }).join('') + '</div>';
+  var tot = '<div class="card"><div class="sec-h"><h2>أعمار ديون عملاء الآجل</h2><span class="muted" style="font-size:12.5px">' + (t.count || 0) + ' عميل · ' + n2(t.bal || 0) + ' ر.س</span></div>' +
+    oxBar_(OX_AG.map(function (a) { return [t[a[0]] || 0, a[2]]; })) +
+    '<p class="muted" style="font-size:12.5px;margin:8px 0 0">الأعمار بطريقة «الأقدم يُسدد أولاً» من دفتر أستاذ العملاء في أونكس.' + (t.credit ? ' أرصدة دائنة (لصالح العملاء): ' + n2(t.credit) + ' ر.س.' : '') + '</p></div>';
+  var list = (d.customers || []).filter(function (c) {
+    if (q && (c.name + ' ' + c.no + ' ' + c.repName).indexOf(q) < 0) return false;
+    if (f === 'all') return c.bal > 0;
+    if (f === 'plat') return c.bal > 0 && /^500/.test(c.no);
+    if (f === 'trade') return c.bal > 0 && !/^500/.test(c.no);
+    if (f === 'credit') return c.bal < 0;
+    if (f === 'norcpt') return c.bal > 0 && !c.rcpt30;
+    return (c[f] || 0) > 0;
+  }).sort(function (a, b) { return f === 'all' || f === 'plat' || f === 'trade' || f === 'credit' || f === 'norcpt' ? Math.abs(b.bal) - Math.abs(a.bal) : (b[f] || 0) - (a[f] || 0); });
+  var chips = crChips_('oxf', [['all', 'الكل'], ['trade', 'عملاء الجملة'], ['plat', 'المنصات والدفع الآجل'], ['a90p', 'أكثر من ٩٠'], ['a90', '٦١–٩٠'], ['a60', '٣١–٦٠'], ['norcpt', 'ما سدد ٣٠ يوم'], ['credit', 'دائن']]);
+  var srch = '<input type="search" id="oxq" placeholder="ابحث باسم العميل أو رقمه أو المندوب" value="' + esc(q) + '" style="margin:0 0 10px">';
+  var rows = list.map(function (c) {
+    var red = c.a90p > 0, lim = c.limit > 0 && c.bal > c.limit;
+    return '<div class="row" style="align-items:flex-start"><span class="av">' + ini(c.name) + '</span><div class="rx" style="flex:1;min-width:0"><b>' + esc(c.name) + '</b>' +
+      '<small>رقم ' + esc(c.no) + ' · ' + esc(c.repName || 'بدون مندوب') + (c.lastBill ? ' · آخر فاتورة ' + dayLabel(c.lastBill) : '') + ' · ' + (c.lastRcpt ? 'آخر تحصيل ' + dayLabel(c.lastRcpt) : 'ما فيه تحصيل مسجّل') + '</small>' +
+      '<div style="margin:6px 0 2px">' + oxBar_(OX_AG.map(function (a) { return [c[a[0]] || 0, a[2]]; })) + '</div>' +
+      '<small class="muted">' + OX_AG.filter(function (a) { return c[a[0]]; }).map(function (a) { return a[1] + ' ' + n2(c[a[0]]); }).join(' · ') + (c.rcpt30 ? ' · سدد خلال ٣٠ يوم ' + n2(c.rcpt30) : '') + '</small>' +
+      (red || lim || c.state === 'موقوف' ? '<div style="margin-top:6px">' + (red ? '<span class="st" style="background:var(--r2);color:var(--r)">دين قديم</span>' : '') + (lim ? '<span class="st" style="background:var(--a2);color:var(--a)">فوق الحد</span>' : '') + (c.state === 'موقوف' ? '<span class="st" style="background:#EEF0F3;color:var(--mu)">موقوف في أونكس</span>' : '') + '</div>' : '') + '</div>' +
+      '<div style="min-width:104px;text-align:left"><b style="font-size:15px;color:' + (c.bal < 0 ? 'var(--g)' : (red ? 'var(--r)' : 'var(--ink)')) + '">' + n2(c.bal) + '</b>' + (c.limit ? '<small class="muted" style="display:block;font-size:11.5px">من حد ' + n2(c.limit) + '</small>' : '') + '</div></div>';
+  }).join('');
+  return head + tot + '<div class="card">' + chips + srch + (rows || empty('check', 'ما فيه عملاء بهذا الفلتر', '')) + '</div>';
+}
+
+// ── صفحة حسابات المناديب ──
+function vReps() {
+  var tab = S.tab, draw = function () {
+    var d = C.onyx; if (S.tab !== tab) return;
+    if (!d || d.none) { $('view').innerHTML = ph('حسابات المناديب', 'من نسخة أونكس الليلية') + OX_EMPTY(); return; }
+    var reps = (d.reps || []).filter(function (r) { return r.salesMonth || r.collMonth || r.cash || r.bank || r.custBal || r.retMonth; });
+    var sum = function (k) { return reps.reduce(function (s, r) { return s + (r[k] || 0); }, 0); };
+    var bento = '<div class="bento"><div class="bx gold"><small>مبيعات الشهر</small><b>' + n2(sum('salesMonth')) + ' <span>ر.س</span></b></div>' +
+      '<div class="bx"><small>تحصيل الشهر</small><b>' + n2(sum('collMonth')) + ' <span>ر.س</span></b></div>' +
+      '<div class="bx"><small>مردودات الشهر</small><b>' + n2(sum('retMonth')) + ' <span>' + oxPct_(sum('retMonth'), sum('salesMonth')) + '%</span></b></div>' +
+      '<div class="bx"><small>نقد وبنك عند المناديب</small><b>' + n2(sum('cash') + sum('bank')) + ' <span>ر.س</span></b></div></div>';
+    var cards = reps.map(function (r) {
+      var rp = oxPct_(r.retMonth, r.salesMonth), boxOld = r.lastBox && r.lastBox < d.date && (r.cash || r.bank);
+      var line = function (l, v, st, sub) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #EEF0F3"><span class="muted">' + l + (sub ? '<small style="display:block;font-size:11.5px">' + sub + '</small>' : '') + '</span><b' + (st ? ' style="' + st + '"' : '') + '>' + v + '</b></div>'; };
+      return '<div class="card"><div class="row" style="border:0;padding:0 0 8px"><span class="av">' + ini(r.name.replace(/^المندوب\s*/, '')) + '</span><div class="rx" style="flex:1"><b>' + esc(r.name) + '</b><small>رمز ' + esc(r.code) + (r.lastBox ? ' · آخر حركة صندوق ' + dayLabel(r.lastBox) : '') + '</small></div>' +
+        (rp >= 10 ? '<span class="st" style="background:var(--r2);color:var(--r)">مردودات ' + rp + '%</span>' : '') + '</div>' +
+        line('مبيعات أمس', n2(r.salesDay)) + line('مبيعات الشهر', n2(r.salesMonth), '', r.billsMonth + ' فاتورة') +
+        line('مردودات الشهر', n2(r.retMonth), rp >= 10 ? 'color:var(--r)' : '', r.retCount + ' مردود · ' + rp + '% من المبيعات') +
+        line('تحصيل الشهر', n2(r.collMonth)) + line('رصيد الصندوق', n2(r.cash), r.cash < 0 ? 'color:var(--r)' : '') + line('رصيد البنك', n2(r.bank), r.bank < 0 ? 'color:var(--r)' : '') +
+        (r.custCount ? line('عملاؤه عليهم', n2(r.custBal), '', r.custCount + ' عميل') : '') +
+        (boxOld ? '<p class="muted" style="font-size:12px;margin:8px 0 0;color:var(--a)">فيه رصيد عند المندوب وآخر حركة صندوق قبل ' + dayLabel(d.date) + ' — تأكد من التوريد.</p>' : '') + '</div>';
+    }).join('');
+    $('view').innerHTML = ph('حسابات المناديب', 'من أول الشهر حتى ' + dayLabel(d.date, true)) + oxNote_(d) + bento + '<div class="brg">' + (cards || OX_EMPTY('ما فيه حركة مناديب هذا الشهر.')) + '</div>' +
+      '<p class="muted" style="font-size:12px">المبيعات من فواتير أونكس (قبل الخصم)، والتحصيل من سندات القبض على حساب العملاء، والأرصدة من حسابَي «صناديق المناديب» و«بنوك المناديب».</p>';
+  };
+  if (C.onyx) draw();
+  oxGet_().then(draw, function (e) { if (C.onyx) toast('ما قدرت أحدّث البيانات — ' + e.message); else fail(e); });
+}
+
+// ── صفحة ربحية المنتجات ──
+function vProfit() {
+  var tab = S.tab, draw = function () {
+    var d = C.onyx; if (S.tab !== tab) return;
+    if (!d || d.none) { $('view').innerHTML = ph('ربحية المنتجات', 'آخر ٩٠ يوم') + OX_EMPTY(); return; }
+    var all = d.profit || [], f = S.pff || 'top', q = S.pfq || '';
+    var cat = function (p) { return !p.note ? 'ok' : (/^ما انباع/.test(p.note) ? 'unsold' : (/^بدون وصفة/.test(p.note) ? 'norec' : 'review')); };
+    var by = {ok: [], unsold: [], norec: [], review: []}; all.forEach(function (p) { by[cat(p)].push(p); });
+    var ok = by.ok, sales = ok.reduce(function (s, p) { return s + p.sales; }, 0), prof = ok.reduce(function (s, p) { return s + p.profit; }, 0);
+    var weak = ok.filter(function (p) { return p.margin < 30; }), loss = ok.filter(function (p) { return p.profit < 0; });
+    var bento = '<div class="bento"><button class="bx gold" data-pff="top"><small>مبيعات ٩٠ يوم (منتجات لها وصفة)</small><b>' + n2(Math.round(sales)) + ' <span>ر.س</span></b></button>' +
+      '<button class="bx" data-pff="top"><small>متوسط الهامش</small><b>' + oxPct_(prof, sales) + '<span>%</span></b></button>' +
+      '<button class="bx" data-pff="weak"><small>هامش أقل من ٣٠٪</small><b' + (weak.length ? ' style="color:var(--a)"' : '') + '>' + weak.length + ' <span>منتج</span></b></button>' +
+      '<button class="bx" data-pff="review"><small>وصفة أو وحدة غلط</small><b' + (by.review.length ? ' style="color:var(--r)"' : '') + '>' + by.review.length + ' <span>منتج</span></b></button></div>' +
+      '<p class="muted" style="font-size:12.5px;margin:-4px 0 12px">' + by.norec.length + ' منتج انباع بدون وصفة في أونكس، و' + by.unsold.length + ' منتج ما انباع آخر ٩٠ يوم — تلقاهم في الفلاتر تحت.</p>';
+    var list = (f === 'weak' ? weak : f === 'loss' ? loss : f === 'review' ? by.review : f === 'norec' ? by.norec : f === 'unsold' ? by.unsold : ok.slice())
+      .filter(function (p) { return !q || (p.name + ' ' + p.code).indexOf(q) >= 0; })
+      .sort(function (a, b) { return f === 'weak' || f === 'low' ? a.margin - b.margin : (f === 'review' || f === 'norec' ? b.sales - a.sales : (f === 'unsold' ? a.name.localeCompare(b.name) : b.profit - a.profit)); }).slice(0, 200);
+    var chips = crChips_('pff', [['top', 'الأعلى ربحاً'], ['low', 'الأقل هامشاً'], ['weak', 'هامش ضعيف'], ['loss', 'خسارة'], ['review', 'وصفة غلط'], ['norec', 'بدون وصفة'], ['unsold', 'ما انباع']]);
+    var rows = list.map(function (p) {
+      var bad = cat(p) !== 'ok', col = bad ? 'var(--mu)' : (p.margin < 0 ? 'var(--r)' : (p.margin < 30 ? 'var(--a)' : 'var(--g)'));
+      return '<tr><td><b>' + esc(p.name) + '</b><br><small class="muted">' + esc(p.code) + (p.note ? ' · <span style="color:var(--r)">' + esc(p.note) + '</span>' : '') + '</small></td>' +
+        '<td>' + n2(p.qty) + '</td><td>' + n2(p.price) + '</td><td>' + n2(p.recipeCost) + '<br><small class="muted">أونكس ' + n2(p.onyxCost) + '</small></td>' +
+        '<td><b style="color:' + col + '">' + (bad ? '—' : p.margin + '%') + '</b></td><td>' + n2(Math.round(p.sales)) + '</td><td><b>' + (bad ? '—' : n2(Math.round(p.profit))) + '</b></td></tr>';
+    }).join('');
+    $('view').innerHTML = ph('ربحية المنتجات', 'آخر ٩٠ يوم حتى ' + dayLabel(d.date, true)) + oxNote_(d) + bento +
+      '<div class="card">' + chips + '<input type="search" id="pfq" placeholder="ابحث باسم المنتج أو رمزه" value="' + esc(q) + '" style="margin:0 0 10px">' +
+      '<div class="scroll"><table><tr><th>المنتج</th><th>الكمية</th><th>متوسط السعر</th><th>تكلفة الوصفة</th><th>الهامش</th><th>المبيعات</th><th>الربح التقديري</th></tr>' + (rows || '<tr><td colspan="7" class="muted">ما فيه منتجات بهذا الفلتر</td></tr>') + '</table></div>' +
+      '<p class="muted" style="font-size:12px;margin:8px 0 0">الهامش = (متوسط سعر البيع − تكلفة الوصفة) ÷ السعر، والتكلفة من وصفات أونكس بأسعار الخامات الحالية. «وصفة غلط» يعني الهامش غير منطقي أو البيع تحت التكلفة بفرق كبير، وغالباً كمية في الوصفة أو وحدة البيع غلط في أونكس. «بدون وصفة» تكلفته من متوسط أونكس، فما يدخل في المتوسط.</p></div>';
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-pff]'), function (b) { b.onclick = function () { S.pff = b.dataset.pff; draw(); }; });
+    var qi = $('pfq'); if (qi) qi.oninput = function () { S.pfq = qi.value.trim(); clearTimeout(S.pfT); S.pfT = setTimeout(function () { draw(); var x = $('pfq'); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 350); };
+  };
+  if (C.onyx) draw();
+  oxGet_().then(draw, function (e) { if (C.onyx) toast('ما قدرت أحدّث البيانات — ' + e.message); else fail(e); });
+}
+
+// ── بطاقة «أمس من أونكس» في الملخص ──
+function oxDash_() {
+  var box = $('dox'); if (!box) return;
+  var draw = function () {
+    var d = C.onyx, b = $('dox'); if (!b || S.tab !== 'dash') return;
+    if (!d || d.none) { b.innerHTML = '<div class="sec-h"><h2>أمس من أونكس</h2></div>' + empty('doc', 'ما وصلت بيانات أونكس بعد', 'تنزل كل ليلة من نسخة القراءة.'); return; }
+    var y = d.day || {sales: 0, returns: 0, coll: 0, bills: 0, by: []}, tr = (d.trend || []).filter(function (x) { return x.date < d.date; }).slice(-7);
+    var avg = function (k) { return tr.length ? tr.reduce(function (s, x) { return s + (x[k] || 0); }, 0) / tr.length : 0; };
+    var cmp = function (v, k) { var a = avg(k); if (!a) return ''; var p = Math.round((v - a) / a * 100); return '<small style="color:' + (p >= 0 ? 'var(--g)' : 'var(--r)') + '">' + (p >= 0 ? '+' : '') + p + '% عن متوسط ٧ أيام</small>'; };
+    var t = d.custTotals || {}, st = (d.posting || []).filter(function (p) { return p.type === 'مبيعات' && p.state && p.state !== 'محدّث' && !/مهد/.test(p.branch); });
+    var by = (y.by || []).filter(function (w) { return w.sales || w.returns; }).sort(function (a, c) { return c.sales - a.sales; }).map(function (w) { return '<span class="st" style="background:#EEF0F3;color:var(--ink)">' + esc(w.name.replace(/^مخزن /, '')) + ' ' + (w.sales ? n2(w.sales) : '') + (w.returns ? (w.sales ? ' · ' : '') + 'مردود ' + n2(w.returns) : '') + '</span>'; }).join('');
+    b.innerHTML = '<div class="sec-h"><h2>' + dayLabel(d.date, true) + ' من أونكس</h2><span class="muted" style="font-size:12.5px">' + (oxOld_(d) ? '<b style="color:var(--r)">بيانات قديمة</b>' : 'نسخة القراءة الليلية') + '</span></div>' +
+      '<div class="bento"><button class="bx gold" data-oxg="reps"><small>المبيعات المسجلة في أونكس</small><b>' + n2(y.sales) + ' <span>ر.س · ' + y.bills + ' فاتورة</span></b>' + cmp(y.sales, 'sales') + '</button>' +
+      '<button class="bx" data-oxg="reps"><small>المردودات</small><b>' + n2(y.returns) + ' <span>' + oxPct_(y.returns, y.sales) + '%</span></b></button>' +
+      '<button class="bx" data-oxg="credit"><small>تحصيل عملاء الآجل</small><b>' + n2(y.coll) + ' <span>ر.س</span></b>' + cmp(y.coll, 'coll') + '</button>' +
+      '<button class="bx" data-oxg="credit"><small>ديون أكثر من ٩٠ يوم</small><b style="color:var(--r)">' + n2(t.a90p || 0) + ' <span>من ' + n2(t.bal || 0) + '</span></b></button></div>' +
+      (by ? '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">' + by + '</div>' : '') +
+      (st.length ? '<p style="font-size:12.5px;margin:8px 0 0;color:var(--r)">ترحيل متأخر: ' + st.map(function (p) { return esc(p.branch + ' · ' + p.type + ' (آخر يوم ' + p.last + ')'); }).join('، ') + '</p>' : '') +
+      '<p class="muted" style="font-size:11.5px;margin:8px 0 0">مبيعات الفروع تظهر هنا بعد ترحيلها من الكاشير لأونكس.</p>';
+    Array.prototype.forEach.call(b.querySelectorAll('[data-oxg]'), function (x) { x.onclick = function () { if (x.dataset.oxg === 'credit') S.ct = 'onyx'; go(x.dataset.oxg); }; });
+  };
+  if (C.onyx) draw(); else box.innerHTML = '<div class="sec-h"><h2>أمس من أونكس</h2></div>' + skel();
+  oxGet_().then(draw, function () { var b = $('dox'); if (b && !C.onyx) b.innerHTML = '<div class="sec-h"><h2>أمس من أونكس</h2></div><p class="muted">تعذّر تحميل بيانات أونكس.</p>'; });
+}
+
 function vCredit() {
   S.ct = S.ct || 'cust'; S.cf = S.cf || 'all'; S.cf2 = S.cf2 || 'all'; S.cf3 = S.cf3 || 'act';
   var tab = S.tab, had = !!(C.coll && C.credit);
   if (had) crRender_();
-  Promise.all([call('collBoard', S.t), call('creditBoard', S.t)]).then(function (r) { C.coll = r[0]; C.credit = r[1]; if (S.tab === tab) crRender_(); },
+  Promise.all([call('collBoard', S.t), call('creditBoard', S.t), oxGet_().catch(function () { return null; })]).then(function (r) { C.coll = r[0]; C.credit = r[1]; if (S.tab === tab) crRender_(); },
     function (e) { if (had) toast('ما قدرت أحدّث البيانات — ' + e.message); else fail(e); });
 }
 function mdRows_(s) { return String(s || '').split('\n').filter(function (l) { return /^\s*\|/.test(l); }).map(function (l) { return l.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(function (c) { return c.trim(); }); }).slice(1); }
@@ -1685,10 +1833,10 @@ function vDash() {
       return '<div class="row clk" data-go="' + a.go + '">' + (m ? stamp(m[1]) : '<div class="stamp" style="color:var(--gd3)">' + I('alert', 22) + '</div>') + '<div class="rx"><b>' + esc(t) + '</b></div></div>';
     }).join('');
     var recent = d.recent.slice(0, 5).map(vRow).join('');
-    $('view').innerHTML = hero + '<div class="dgrid"><div>' + bento + '<div class="card" id="needc"><div class="sec-h"><h2>' + (own ? 'يحتاج قرارك' : 'يحتاج متابعة') + '</h2><span class="muted" id="needn" style="font-size:12.5px"></span></div><div id="mordec"></div>' + decs + '<div id="crdec"></div><div id="ofdec"></div><div id="needz"></div></div></div><div>' + (own ? '<div id="morc"></div>' : '') +
+    $('view').innerHTML = hero + '<div class="dgrid"><div>' + bento + (S.side && S.side.indexOf('credit') >= 0 ? '<div class="card" id="dox"></div>' : '') + '<div class="card" id="needc"><div class="sec-h"><h2>' + (own ? 'يحتاج قرارك' : 'يحتاج متابعة') + '</h2><span class="muted" id="needn" style="font-size:12.5px"></span></div><div id="mordec"></div>' + decs + '<div id="crdec"></div><div id="ofdec"></div><div id="needz"></div></div></div><div>' + (own ? '<div id="morc"></div>' : '') +
       '<div class="card" id="upc"><div class="sec-h"><h2>القادم</h2></div>' + (ups || empty('check', 'ما فيه شي قادم', 'كل شي تمام')) + '</div>' +
       '<div class="card"><div class="sec-h"><h2>آخر السندات</h2><button class="lnk" data-go="vlist">الكل</button></div>' + (recent || empty('receipt', 'ما فيه سندات بعد')) + '</div></div></div>';
-    needCount_(); crDec_(); ofDash_(); morDash_();
+    needCount_(); crDec_(); ofDash_(); morDash_(); oxDash_();
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-go]'), function (a) { a.onclick = function () { go(a.dataset.go); }; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'), function (a) { a.onclick = function () { var q = a.dataset.q; go(q); if (q === 'req') reqForm(); if (q === 'leave') leaveForm(); }; });
     $('bell').onclick = function () { var u = $('upc'); var t = dec.length ? document.querySelector('.dec') : u; if (t) t.scrollIntoView({behavior: 'smooth', block: 'center'}); };
@@ -1734,7 +1882,7 @@ function oSheet_(title, body) { modal('<div class="sec-h"><h2>' + title + '</h2>
 function oDraw_() {
   var d = S.odash; if (!d || S.tab !== 'dash' || !$('oh')) return;
   var k = d.kpi, m = C.morning && !C.morning.none ? C.morning : null, b = m ? m.brief || {} : {}, cl = b.closings || {}, tl = b.tiles || {};
-  var old = m && m.dateISO < isoToday_(), dd = C.decDone || {}, all0 = oItems_(d), items = all0.filter(function (x) { return !dd[x.key]; }), done = all0.filter(function (x) { return dd[x.key]; });
+  var old = m && m.dateISO < isoToday_(), dd = C.decDone || {}, all0 = oItems_(d).map(function (x, j) { x.j = j; x.dc = dcState_(x); if (x.dc && !x.dc.hide) { x.lv = 'r'; x.s = x.dc.txt; x.u = -1; } return x; }).sort(function (a, b) { return a.u - b.u || a.j - b.j; }), items = all0.filter(function (x) { return !dd[x.key] && !(x.dc && x.dc.hide); }), done = all0.filter(function (x) { return dd[x.key]; }), trk = all0.filter(function (x) { return !dd[x.key] && x.dc && x.dc.hide; });
   var crT = C.coll ? C.coll.custs.reduce(function (s, x) { return s + x.bal; }, 0) : 0;
   var cmp = String(cl.cmp || ''), dn = /↓|-/.test(cmp.slice(0, 2));
   // جملة اليوم
@@ -1751,11 +1899,11 @@ function oDraw_() {
   var lim = window.innerWidth >= 960 ? 6 : 4, all = S.oall, shown = all ? items : items.slice(0, lim);
   $('odec').innerHTML = '<div class="sec-h"><h2>العاجل الآن</h2><span class="muted" style="font-size:12.5px">' + (items.length ? (all || items.length <= lim ? items.length : shown.length + ' من ' + items.length) : '') + '</span></div>' +
     (items.length ? shown.map(function (x, i) {
-      var det = (x.htm ? '<p>' + x.htm + '</p>' : '') + (x.det ? '<p>' + esc(x.det) + '</p>' : '') + ((x.links || []).length ? '<p class="olk">' + morLinks_(x.links) + '</p>' : '') + '<div class="oacts">' + (x.fn ? '<button class="btn" data-ob="' + i + '">' + esc(x.btn) + '</button>' : '') + '<button class="odone" data-od="' + i + '">' + I('check', 16, 2.4) + 'تم</button></div>';
+      var det = (x.htm ? '<p>' + x.htm + '</p>' : '') + (x.det ? '<p>' + esc(x.det) + '</p>' : '') + ((x.links || []).length ? '<p class="olk">' + morLinks_(x.links) + '</p>' : '') + '<div class="oacts">' + (x.fn ? '<button class="btn" data-ob="' + i + '">' + esc(x.btn) + '</button>' : '') + '<button class="oac" data-dt="' + i + '">' + I('flag', 15, 2.2) + 'حوّله لمهمة</button>' + (x.amt && x.dir !== 'in' ? '<button class="oac" data-dp="' + i + '">' + I('card', 15, 2.2) + 'خطة سداد</button>' : '') + '<button class="oac" data-dz="' + i + '">' + I('cal', 15, 2.2) + 'أجّله</button><button class="odone" data-od="' + i + '">' + I('check', 16, 2.4) + 'تم</button></div>';
       return '<div class="orw" data-oi="' + i + '" role="button" tabindex="0" aria-expanded="false"><span class="oic ' + x.lv + '">' + I(x.ic, 19) + '</span><div class="ox"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + (x.s ? ' · ' + esc(x.s) : '') + '</small></div>' +
         (x.amt ? '<div class="oam' + (x.dir === 'in' ? ' in' : '') + '">' + n2(Math.round(x.amt)) + '</div>' : '') + '<span class="och">' + I('chev', 16) + '</span></div>' + (det ? '<div class="odet" id="od' + i + '" hidden>' + det + '</div>' : '');
-    }).join('') + (items.length > lim || done.length ? '<div class="ofoot">' + (items.length > lim ? '<button class="omore" id="omore">' + (all ? 'أقل' : 'عرض الكل · ' + items.length) + '</button>' : '<span></span>') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</div>' : '')
-    : empty('check', 'ما فيه شي ينتظرك', 'كل شي ماشي') + (done.length ? '<div class="ofoot"><span></span><button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button></div>' : ''));
+    }).join('') + (items.length > lim || done.length || trk.length ? '<div class="ofoot">' + (items.length > lim ? '<button class="omore" id="omore">' + (all ? 'أقل' : 'عرض الكل · ' + items.length) + '</button>' : '<span></span>') + '<span style="display:flex;gap:8px;flex-wrap:wrap">' + (trk.length ? '<button class="odn odt" id="odt">' + I('flag', 14, 2.4) + ' قيد المتابعة ' + trk.length + '</button>' : '') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</span></div>' : '')
+    : empty('check', 'ما فيه شي ينتظرك', 'كل شي ماشي') + (done.length || trk.length ? '<div class="ofoot"><span></span><span style="display:flex;gap:8px;flex-wrap:wrap">' + (trk.length ? '<button class="odn odt" id="odt">' + I('flag', 14, 2.4) + ' قيد المتابعة ' + trk.length + '</button>' : '') + (done.length ? '<button class="odn" id="odn">' + I('check', 14, 2.4) + ' أنجزت ' + done.length + '</button>' : '') + '</span></div>' : ''));
   Array.prototype.forEach.call(document.querySelectorAll('#odec .orw'), function (r) {
     var t = function () { var dt = $('od' + r.dataset.oi); if (!dt) return; dt.hidden = !dt.hidden; r.classList.toggle('op', !dt.hidden); r.setAttribute('aria-expanded', String(!dt.hidden)); };
     r.onclick = t; r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t(); } };
@@ -1763,6 +1911,8 @@ function oDraw_() {
   Array.prototype.forEach.call(document.querySelectorAll('#odec [data-ob]'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); shown[bt.dataset.ob].fn(); }; });
   if ($('omore')) $('omore').onclick = function () { S.oall = !S.oall; oDraw_(); };
   Array.prototype.forEach.call(document.querySelectorAll('#odec [data-od]'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); oDone_(shown[bt.dataset.od], true); }; });
+  [['dt', dcTaskM_], ['dp', dcPlanM_], ['dz', dcSnoozeM_]].forEach(function (p) { Array.prototype.forEach.call(document.querySelectorAll('#odec [data-' + p[0] + ']'), function (bt) { bt.onclick = function (e) { e.stopPropagation(); var x = shown[bt.dataset[p[0]]]; if (p[0] !== 'dz' && !S.tk) { toast('لحظة، المهام تحمّل…'); tkLoad_().catch(function () {}); return; } p[1](x); }; }); });
+  if ($('odt')) $('odt').onclick = function () { dcTrackM_(trk); };
   if ($('odn')) $('odn').onclick = function () {
     var md = modal('<div class="sec-h"><h2>أنجزتها</h2></div>' + done.map(function (x, i) { return '<div class="row"><div class="rx" style="flex:1;min-width:0"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + ' · تم ' + dayLabel(dd[x.key]) + '</small></div><button class="lnk" data-ou="' + i + '">رجّعه</button></div>'; }).join('') + '<p class="muted" style="font-size:12.5px;margin:12px 0 0">لو رجع نفس البند بمبلغ مختلف في ملخص بكرة، يطلع لك من جديد.</p>');
     Array.prototype.forEach.call(md.querySelectorAll('[data-ou]'), function (b) { b.onclick = function () { md.remove(); oDone_(done[b.dataset.ou], false); }; });
@@ -1818,6 +1968,141 @@ function oDraw_() {
     };
   });
 }
+// ===== بنود «العاجل الآن»: حوّله لمهمة / خطة سداد / أجّله =====
+// البند المربوط يطلع من العاجل ويتابَع في قسم المهام، ويرجع للعاجل لحاله لو تأخرت المهمة أو فاتت دفعة.
+function dcTasks_(a) { if (!S.tk) return null; return (a.ids || []).map(function (id) { return S.tk.tasks.filter(function (t) { return String(t.id) === String(id); })[0]; }).filter(Boolean); }
+function dcSteps_(t) { return (t.steps || []).map(function (s) { var d = String(s.t).match(/(\d{4}-\d{2}-\d{2})/), a = String(s.t).match(/·\s*([\d,.]+)\s*ر\.س/); return {d: d ? d[1] : '', amt: a ? Number(a[1].replace(/,/g, '')) : 0, done: !!s.done, val: s.val || ''}; }); }
+function dcState_(x) {
+  var a = (C.decAct || {})[x.key]; if (!a) return null;
+  var today = isoToday_();
+  if (a.k === 'snooze') return today < a.until ? {hide: true, txt: 'مؤجل لين ' + dayLabel(a.until) + (a.why ? ' — ' + a.why : '')} : {hide: false, txt: 'رجع من التأجيل' + (a.why ? ' — ' + a.why : '')};
+  var ts = dcTasks_(a);
+  if (ts === null) return {hide: true, txt: a.k === 'plan' ? 'خطة سداد' : 'محوّل للمهام'};
+  if (!ts.length) return null;
+  var open = ts.filter(tkOpenSt_), wait = ts.filter(function (t) { return t.state === 'wait'; }), who = ts.map(function (t) { return t.whoName || (TK_WHO[t.who] || [''])[0]; }).join(' و');
+  if (a.k === 'plan') {
+    var st = [].concat.apply([], ts.map(dcSteps_)), sum = function (l) { return l.reduce(function (s, y) { return s + y.amt; }, 0); };
+    var paid = sum(st.filter(function (s) { return s.done; })), tot = sum(st), nx = st.filter(function (s) { return !s.done; })[0], late = st.filter(function (s) { return !s.done && s.d && s.d < today; });
+    var txt = 'مدفوع ' + n2(paid) + ' من ' + n2(tot) + (nx ? ' · الدفعة الجاية ' + n2(nx.amt) + ' ' + dayLabel(nx.d) : '');
+    if (!open.length && !wait.length) return {hide: true, closed: true, txt: 'خطة السداد خلصت · ' + txt, pct: 100};
+    if (late.length) return {hide: false, late: true, txt: 'دفعة متأخرة من ' + dayLabel(late[0].d) + ' · ' + txt, pct: tot ? Math.round(100 * paid / tot) : 0};
+    return {hide: true, txt: txt + ' · عند ' + who, pct: tot ? Math.round(100 * paid / tot) : 0};
+  }
+  if (!open.length && !wait.length) return {hide: true, closed: true, txt: 'المهمة خلصت · ' + who};
+  if (open.some(function (t) { return t.late; })) return {hide: false, late: true, txt: 'المهمة متأخرة · عند ' + who};
+  var sd = ts.reduce(function (s, t) { return s + (t.stepsDone || 0); }, 0), sn = ts.reduce(function (s, t) { return s + (t.steps || []).length; }, 0);
+  return {hide: true, txt: (wait.length ? 'تنتظر تأكيدك' : 'عند ' + who) + (sn ? ' · ' + sd + ' من ' + sn + ' خطوات' : '')};
+}
+function dcDet_(x) {
+  var p = [], tx = function (h) { return String(h || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); };
+  if (x.s) p.push(tx(x.s)); if (x.det) p.push(tx(x.det)); if (x.htm) p.push(tx(x.htm));
+  if (x.amt) p.push('المبلغ: ' + n2(Math.round(x.amt)) + ' ر.س');
+  p.push('المصدر: العاجل في الملخص · ' + tx(x.src));
+  return p.join('\n').slice(0, 580);
+}
+function dcSave_(x, a, d, okMsg) {
+  return call('decAct', S.t, x.key, a).then(function (m) { C.decAct = m; S.daAt = Date.now(); if (d) d.remove(); toast(okMsg); tkLoad_().catch(function () {}); oDraw_(); });
+}
+function dcMake_(x, list, k, d, b, okMsg) {
+  var ids = [], p = Promise.resolve();
+  busy(b, true);
+  list.forEach(function (q) { p = p.then(function () { return call('taskSave', S.t, q).then(function (r) { ids.push(r.id); }); }); });
+  p.then(function () { return dcSave_(x, {k: k, ids: ids, lbl: x.t}, d, okMsg); })
+   .catch(function (e) {
+     busy(b, false);
+     if (ids.length) dcSave_(x, {k: k, ids: ids, lbl: x.t}, null, 'انربطت ' + ids.length + ' مهمة').catch(function () {});
+     msg('dcm', e.message + (ids.length ? ' — انشأت ' + ids.length + ' مهمة وانربطت' : ''));
+   });
+}
+function dcWho_(d, f, multi) {
+  Array.prototype.forEach.call(d.querySelectorAll('[data-w]'), function (b) { b.onclick = function () {
+    if (multi) { f.who[b.dataset.w] = !f.who[b.dataset.w]; b.classList.toggle('on', !!f.who[b.dataset.w]); }
+    else { f.who = b.dataset.w; Array.prototype.forEach.call(d.querySelectorAll('[data-w]'), function (y) { y.classList.toggle('on', y === b); }); }
+  }; });
+}
+function dcWhoUi_(f, multi) { return '<div class="tkwho">' + ['acc', 'store', 'owner'].map(function (w) { var on = multi ? f.who[w] : f.who === w; return '<button type="button" data-w="' + w + '" class="' + (on ? 'on' : '') + '">' + tkAv_(w, 28) + (w === 'owner' ? 'نفسي' : TK_WHO[w][0]) + '</button>'; }).join('') + '</div>'; }
+function dcTaskM_(x) {
+  var today = isoToday_(), f = {who: {acc: true}, pri: 'normal'};
+  var d = modal('<h2>حوّله لمهمة</h2><p class="muted" style="margin:-4px 0 6px">' + esc(x.t) + '</p>' +
+    '<label>لمين؟ (تقدر تختار أكثر من واحد)</label>' + dcWhoUi_(f, true) +
+    '<label for="dct">وش المطلوب؟</label><input id="dct" maxlength="140" value="' + esc(x.t) + '">' +
+    '<label for="dcd">التفاصيل</label><textarea id="dcd" rows="4">' + esc(dcDet_(x)) + '</textarea>' +
+    '<label for="dcdd">الموعد</label><input type="date" id="dcdd" min="' + today + '" value="' + tkAdd_(today, 2) + '">' +
+    '<label>الأولوية</label>' + tkPick_(d, 'pri', f.pri, [['urgent', 'عاجل'], ['normal', 'عادي'], ['later', 'يقدر ينتظر']]) +
+    '<p class="muted" style="font-size:12.5px;margin:12px 2px 0">البند يطلع من «العاجل الآن» ويتابَع في قسم المهام، ويرجع هنا لحاله لو تأخرت المهمة. واللي تختاره يوصله إيميل.</p>' +
+    '<button class="btn" id="dcs">حوّلها للمهام</button><div id="dcm" class="msg"></div>');
+  dcWho_(d, f, true); tkWire_(d, f, function () {});
+  d.querySelector('#dcs').onclick = function () {
+    var ws = Object.keys(f.who).filter(function (w) { return f.who[w]; }), title = d.querySelector('#dct').value.trim(), due = d.querySelector('#dcdd').value;
+    if (!ws.length) return msg('dcm', 'اختر مين المسؤول');
+    if (!title) return msg('dcm', 'اكتب وش المطلوب');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(due)) return msg('dcm', 'اختر الموعد');
+    dcMake_(x, ws.map(function (w) { return {who: w, title: title, det: d.querySelector('#dcd').value, steps: [], due: due, pri: f.pri, rep: 'once', force: true}; }), 'task', d, this, 'تحوّل للمهام — ' + ws.map(function (w) { return w === 'owner' ? 'لك' : TK_WHO[w][0]; }).join(' و'));
+  };
+}
+function dcPlanM_(x) {
+  var today = isoToday_(), p0 = today.split('-'), first = new Date(Number(p0[0]), Number(p0[1]), 1);
+  var f = {who: 'acc', every: 'm'}, rows = [];
+  var fd = first.getFullYear() + '-' + ('0' + (first.getMonth() + 1)).slice(-2) + '-01';
+  var d = modal('<h2>خطة سداد</h2><p class="muted" style="margin:-4px 0 6px">' + esc(x.t) + '</p>' +
+    '<label>مين يتابع السداد ويسجل الدفعات؟</label>' + dcWhoUi_(f, false) +
+    '<label for="dpt">المبلغ الإجمالي (ر.س)</label><input id="dpt" type="number" min="1" step="0.01" inputmode="decimal" value="' + (x.amt ? Math.round(x.amt) : '') + '">' +
+    '<div style="display:flex;gap:10px"><div style="flex:1"><label for="dpn">عدد الدفعات</label><select id="dpn">' + [1, 2, 3, 4, 5, 6, 8, 10].map(function (n) { return '<option' + (n === 3 ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
+    '<div style="flex:1"><label for="dpf">أول دفعة</label><input type="date" id="dpf" min="' + today + '" value="' + fd + '"></div></div>' +
+    '<label>كل</label>' + tkPick_(d, 'every', f.every, [['m', 'شهر'], ['h', 'أسبوعين'], ['w', 'أسبوع']]) +
+    '<button class="btn l" id="dpg" type="button">وزّع الدفعات</button><div id="dpr"></div><div id="dpsum" class="muted" style="font-size:12.5px;margin-top:8px"></div>' +
+    '<p class="muted" style="font-size:12.5px;margin:12px 2px 0">كل دفعة تصير خطوة في المهمة، وما تتعلّم «تم» إلا برقم سند أونكس. البند يطلع من «العاجل الآن» ويرجع لحاله لو فاتت دفعة.</p>' +
+    '<button class="btn" id="dps">اعتمد الخطة</button><div id="dcm" class="msg"></div>');
+  dcWho_(d, f, false); tkWire_(d, f, function () { if (rows.length) gen(); });
+  var tot = function () { return Math.round(Number(d.querySelector('#dpt').value || 0) * 100) / 100; };
+  var addD = function (s, i) { var p = s.split('-'), y = Number(p[0]), m = Number(p[1]) - 1, dd = Number(p[2]), z = f.every === 'm' ? new Date(y, m + i, Math.min(dd, 28)) : new Date(y, m, dd + i * (f.every === 'h' ? 14 : 7)); return z.getFullYear() + '-' + ('0' + (z.getMonth() + 1)).slice(-2) + '-' + ('0' + z.getDate()).slice(-2); };
+  var sumUi = function () { var s = rows.reduce(function (a, r) { return a + (Number(r.a) || 0); }, 0), t = tot(), df = Math.round((t - s) * 100) / 100; d.querySelector('#dpsum').innerHTML = rows.length ? 'مجموع الدفعات ' + n2(s) + ' من ' + n2(t) + (df ? ' <b style="color:var(--r)">· الفرق ' + n2(df) + '</b>' : ' ✓') : ''; };
+  var draw = function () {
+    d.querySelector('#dpr').innerHTML = rows.map(function (r, i) { return '<div class="tksr"><span style="min-width:62px;font-weight:700">دفعة ' + (i + 1) + '</span><input type="number" step="0.01" inputmode="decimal" data-a="' + i + '" value="' + r.a + '" aria-label="مبلغ الدفعة ' + (i + 1) + '"><input type="date" data-d="' + i + '" value="' + r.d + '" aria-label="تاريخ الدفعة ' + (i + 1) + '"></div>'; }).join('');
+    Array.prototype.forEach.call(d.querySelectorAll('[data-a]'), function (e) { e.oninput = function () { rows[e.dataset.a].a = e.value; sumUi(); }; });
+    Array.prototype.forEach.call(d.querySelectorAll('[data-d]'), function (e) { e.onchange = function () { rows[e.dataset.d].d = e.value; }; });
+    sumUi();
+  };
+  var gen = function () { var n = Number(d.querySelector('#dpn').value), t = tot(), fs = d.querySelector('#dpf').value || fd, part = Math.floor(t / n * 100) / 100; rows = []; for (var i = 0; i < n; i++) rows.push({a: i === n - 1 ? Math.round((t - part * (n - 1)) * 100) / 100 : part, d: addD(fs, i)}); draw(); };
+  d.querySelector('#dpg').onclick = gen; d.querySelector('#dpt').oninput = sumUi;
+  if (x.amt) gen();
+  d.querySelector('#dps').onclick = function () {
+    var t = tot(); if (!(t > 0)) return msg('dcm', 'اكتب المبلغ الإجمالي');
+    if (!rows.length) return msg('dcm', 'اضغط «وزّع الدفعات» أول');
+    var s = Math.round(rows.reduce(function (a, r) { return a + (Number(r.a) || 0); }, 0) * 100) / 100;
+    if (Math.abs(s - t) > 0.01) return msg('dcm', 'مجموع الدفعات ' + n2(s) + ' ما يساوي الإجمالي ' + n2(t));
+    for (var i = 0; i < rows.length; i++) { if (!(Number(rows[i].a) > 0)) return msg('dcm', 'مبلغ الدفعة ' + (i + 1) + ' ناقص'); if (!/^\d{4}-\d{2}-\d{2}$/.test(rows[i].d)) return msg('dcm', 'تاريخ الدفعة ' + (i + 1) + ' ناقص'); if (i && rows[i].d < rows[i - 1].d) return msg('dcm', 'تواريخ الدفعات لازم بالترتيب'); }
+    var steps = rows.map(function (r, i) { return {t: 'دفعة ' + (i + 1) + ' · ' + (Math.round(Number(r.a) * 100) / 100) + ' ر.س · ' + r.d, need: 'note'}; });
+    var det = 'خطة سداد: ' + rows.length + ' دفعات بإجمالي ' + n2(t) + ' ر.س. علّم كل دفعة لما تنصرف واكتب رقم سند أونكس.\n' + dcDet_(x);
+    dcMake_(x, [{who: f.who, title: ('خطة سداد: ' + x.t).slice(0, 140), det: det, steps: steps, due: rows[rows.length - 1].d, pri: 'normal', rep: 'once', force: true}], 'plan', d, this, 'انعتمدت خطة السداد');
+  };
+}
+function dcSnoozeM_(x) {
+  var today = isoToday_();
+  var d = modal('<h2>أجّله</h2><p class="muted" style="margin:-4px 0 6px">' + esc(x.t) + '</p>' +
+    '<label>لين متى؟</label>' + tkPick_(d, 'z', '3', [['3', 'بعد ٣ أيام'], ['7', 'أسبوع'], ['14', 'أسبوعين'], ['p', 'تاريخ']]) +
+    '<div id="dzp" style="display:none"><input type="date" id="dzd" min="' + tkAdd_(today, 1) + '" value="' + tkAdd_(today, 30) + '" aria-label="تاريخ التأجيل"></div>' +
+    '<label for="dzw">السبب</label><input id="dzw" maxlength="200" placeholder="مثال: ننتظر رد التأمينات على التقسيط">' +
+    '<p class="muted" style="font-size:12.5px;margin:12px 2px 0">يختفي من «العاجل الآن» ويرجع لحاله في التاريخ اللي تحدده.</p>' +
+    '<button class="btn" id="dzs">أجّله</button><div id="dcm" class="msg"></div>');
+  var f = {z: '3'}; tkWire_(d, f, function () { d.querySelector('#dzp').style.display = f.z === 'p' ? 'block' : 'none'; });
+  d.querySelector('#dzs').onclick = function () {
+    var b = this, until = f.z === 'p' ? d.querySelector('#dzd').value : tkAdd_(today, Number(f.z));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(until) || until <= today) return msg('dcm', 'اختر تاريخ بعد اليوم');
+    busy(b, true);
+    dcSave_(x, {k: 'snooze', until: until, why: d.querySelector('#dzw').value.trim(), lbl: x.t}, d, 'تأجل لين ' + dayLabel(until)).catch(function (e) { busy(b, false); msg('dcm', e.message); });
+  };
+}
+function dcTrackM_(list) {
+  var md = modal('<div class="sec-h"><h2>قيد المتابعة</h2></div>' + (list.length ? list.map(function (x, i) {
+    var st = x.dc || {}, a = (C.decAct || {})[x.key] || {};
+    return '<div class="row" style="align-items:flex-start"><div class="rx" style="flex:1;min-width:0"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + (x.amt ? ' · ' + n2(Math.round(x.amt)) + ' ر.س' : '') + '</small><small style="color:' + (st.closed ? 'var(--g)' : 'var(--ink)') + ';line-height:1.7">' + (st.closed ? '✓ ' : '') + esc(st.txt || '') + '</small>' +
+      (st.pct !== undefined && !st.closed ? '<div class="dcbar"><i style="width:' + Math.max(3, st.pct) + '%"></i></div>' : '') + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">' + (a.ids ? '<button class="lnk" data-tg="' + i + '">افتح المهمة</button>' : '') + '<button class="lnk" data-tu="' + i + '">' + (st.closed ? 'شيله' : 'رجّعه للعاجل') + '</button></div></div>';
+  }).join('') : empty('check', 'ما فيه بنود قيد المتابعة', '')) + '<p class="muted" style="font-size:12.5px;margin:12px 0 0">«رجّعه للعاجل» يفك الربط بس، والمهمة نفسها تبقى في قسم المهام.</p>');
+  Array.prototype.forEach.call(md.querySelectorAll('[data-tg]'), function (b) { b.onclick = function () { var a = C.decAct[list[b.dataset.tg].key]; md.remove(); go('tasks'); setTimeout(function () { if (tkFind_(a.ids[0])) tkOpen_(a.ids[0]); }, 400); }; });
+  Array.prototype.forEach.call(md.querySelectorAll('[data-tu]'), function (b) { b.onclick = function () { var x = list[b.dataset.tu]; if (x.dc && x.dc.closed) { md.remove(); oDone_(x, true); return; } busy(b, true); call('decAct', S.t, x.key, null).then(function (m) { C.decAct = m; S.daAt = Date.now(); md.remove(); toast('رجع للعاجل'); oDraw_(); }, function (e) { busy(b, false); toast(e.message); }); }; });
+}
 function oDone_(x, on) {
   if (!x || !x.key) return; C.decDone = C.decDone || {}; var prev = C.decDone[x.key];
   if (on) C.decDone[x.key] = isoToday_(); else delete C.decDone[x.key]; oDraw_();
@@ -1834,6 +2119,7 @@ function oLoad_() {
   hit('credit', 'crgAt', 300000, 'creditBoard', [S.t]);
   hit('offices', 'ofAt', 300000, 'officesBoard', [S.t]);
   hit('decDone', 'ddAt', 60000, 'decState', [S.t]);
+  hit('decAct', 'daAt', 60000, 'decActs', [S.t]);
   if (!S.side || S.side.indexOf('branches') >= 0) hit('branches', 'brAt', 600000, 'branchesBoard', [S.t]);
 }
 function dSpark_(vs, col) {
@@ -1943,11 +2229,11 @@ function vDashO() {
     $('view').innerHTML = '<section class="dhd" id="oh"><div class="dhl"><small>' + dayLabel(isoToday_(), true) + ' · شواطئ النخيل</small><h1>' + greet() + '، مهند</h1><div class="ohi" id="ohi"></div></div>' +
       '<div class="dha"><button class="ib" id="osq" aria-label="بحث سريع">' + I('srch', 20) + '</button><button class="ib" id="bell" aria-label="قرارات اليوم">' + I('bell', 21) + '</button>' +
       '<button class="qbtn gd" data-q="tasks">' + I('plus', 17, 2.4) + 'مهمة جديدة</button></div></section>' +
-      '<div class="dk" id="dk"></div>' +
+      '<div class="dk" id="dk"></div>' + '<div class="card" id="dox"></div>' +
       '<div class="dg"><div class="card od" id="odec"></div><div class="dcol"><div class="card" id="ddv"></div><div class="card dmn"><div class="sec-h"><h2>المال خلال ٧ أيام</h2></div><div class="ost" id="ost"></div><div class="qa"><button class="qbtn" data-q="req">طلب جديد</button><button class="qbtn" data-q="leave">نموذج إجازة</button></div></div></div></div>' +
       '<div class="card dmo" id="dmo"></div>' +
       '<div class="sec-h dsh"><h2>كل الأقسام</h2><span class="muted" style="font-size:12.5px">اضغط أي قسم ينقلك له</span></div><div class="dnav" id="dnav"></div><div class="ob" id="obento" hidden></div><div class="ochips" id="ochips"></div>';
-    oDraw_(); oLoad_(); if (!S.tk) tkLoad_().catch(function () {});
+    oDraw_(); oLoad_(); oxDash_(); if (!S.tk) tkLoad_().catch(function () {});
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'), function (a) { a.onclick = function () { var q = a.dataset.q; go(q); if (q === 'req') reqForm(); if (q === 'leave') leaveForm(); if (q === 'tasks' && typeof tkNew_ === 'function') setTimeout(function () { if (S.tk) tkNew_(); }, 400); }; });
     $('bell').onclick = function () { $('odec').scrollIntoView({behavior: 'smooth', block: 'start'}); }; $('osq').onclick = qSearch_;
   }).catch(fail);
