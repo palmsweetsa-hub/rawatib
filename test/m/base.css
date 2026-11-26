@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+*{box-sizing:border-box;font-family:Tajawal,Tahoma,sans-serif;margin:0}
+body{background:#F3F4F7;color:#101828;direction:rtl;zoom:.62}
+.pg{width:1280px;margin:0 auto;padding:22px}
+.n{font-variant-numeric:tabular-nums}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px}
+.g{background:#E2EFDA;color:#1E6B34}.a{background:#FFF4D6;color:#8A5A00}.r{background:#FDECEC;color:#B42318}.x{background:#EEF0F3;color:#667085}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.card{background:#fff;border:1px solid #EAECF0;border-radius:20px;padding:16px 18px}
+h3{font-size:15px;font-weight:800;margin-bottom:10px}
+.mu{color:#667085;font-size:12.5px}
