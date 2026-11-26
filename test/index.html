@@ -2329,9 +2329,13 @@ function vDashO() {
 // ===== إقفال فرع ناقص: نكمّل رقمه من مبيعات أونكس لنفس اليوم (لو مترحّلة)، وإلا نكتب بوضوح إن المجموع ناقص =====
 function isoPrev_(iso) { var d = new Date(String(iso).slice(0, 10) + 'T00:00:00'); d.setDate(d.getDate() - 1); return isoD_(d); }
 function brOx_(name, dayISO) {   // مبيعات الفرع في أونكس لليوم المطلوب بعد الخصم والمردود، أو null إذا أونكس ما عنده نفس اليوم
-  var d = C.onyx; if (!d || d.none || !d.day || d.day.date !== dayISO) return null;
-  var w = (d.day.by || []).filter(function (x) { return /فرع/.test(x.name) && x.name.indexOf(name) >= 0; })[0];
-  return w && (w.sales || w.bills) ? {v: Math.round((w.sales || 0) - (w.disc || 0) - (w.returns || 0)), bills: w.bills || 0} : null;
+  var d = C.onyx; if (!d || d.none) return null;
+  if (d.day && d.day.date === dayISO) {
+    var w = (d.day.by || []).filter(function (x) { return /فرع/.test(x.name) && x.name.indexOf(name) >= 0; })[0];
+    return w && (w.sales || w.bills) ? {v: Math.round((w.sales || 0) - (w.disc || 0) - (w.returns || 0)), bills: w.bills || 0} : null;
+  }
+  var t = (d.trend || []).filter(function (x) { return x.date === dayISO && x.br; })[0], b = t ? t.br.filter(function (x) { return x.name.indexOf(name) >= 0; })[0] : null;
+  return b && (b.v || b.bills) ? {v: Math.round(b.v || 0), bills: b.bills || 0} : null;
 }
 function brFix_(list, total, dayISO) {   // يرجع المجموع بعد التكميل، ووش تكمّل من أونكس، ووش باقي ناقص، وجملة توضح للمالك
   var out = {total: Number(total) || 0, by: {}, ox: [], miss: [], ok: [], wait: false, note: ''};
@@ -2352,7 +2356,10 @@ function brHist_(days) {
   days.forEach(function (D) { var bd = new Date(D.brief + 'T00:00:00'); (D.branches || []).forEach(function (b) { var tr = b.trend || []; tr.forEach(function (v, i) { if (v === null || v === undefined || v === '') return; var dt = new Date(bd); dt.setDate(dt.getDate() - (tr.length - i)); var k = isoD_(dt); (h[k] = h[k] || {})[b.name] = Number(v) || 0; }); }); });
   days.forEach(function (D) { var dt = new Date(D.brief + 'T00:00:00'); dt.setDate(dt.getDate() - 1); var k = isoD_(dt); (D.branches || []).forEach(function (b) { if (b.net !== null && b.net !== undefined) (h[k] = h[k] || {})[b.name] = Number(b.net) || 0; }); });
   var ox = {}, L = days[days.length - 1];
-  if (L) { var lk = isoPrev_(L.brief); (L.branches || []).forEach(function (b) { if (b.net !== null && b.net !== undefined) return; var o = brOx_(b.name, lk); if (o) { (h[lk] = h[lk] || {})[b.name] = o.v; ox[lk + '|' + b.name] = 1; } }); }
+  if (L) (L.branches || []).forEach(function (b) {   // أي يوم إقفاله ناقص لفرع، يتكمّل من مبيعات أونكس لنفس اليوم لو موجودة
+    if (/مهد/.test(b.name)) return;
+    Object.keys(h).concat([isoPrev_(L.brief)]).forEach(function (k) { if (h[k] && h[k][b.name] !== undefined) return; var o = brOx_(b.name, k); if (o) { (h[k] = h[k] || {})[b.name] = o.v; ox[k + '|' + b.name] = 1; } });
+  });
   Object.defineProperty(h, 'ox', {value: ox, enumerable: false});   // علامة الأرقام اللي جاية من أونكس مو من الإقفال
   return h;
 }
@@ -2385,7 +2392,7 @@ function brRender_() {
   }).join('');
   var rows = dates.slice().reverse().slice(0, 31).map(function (k) { var s = tot(k); return '<tr><td style="white-space:nowrap">' + dayLabel(k, true) + '</td>' + names.map(function (n) { var v = h[k][n]; return '<td>' + (v === undefined ? '<span class="muted">—</span>' : n2(v) + (h.ox[k + '|' + n] ? ' <small class="muted">أونكس</small>' : '')) + '</td>'; }).join('') + '<td><b>' + n2(s) + '</b></td></tr>'; }).join('');
   var table = '<div class="card"><div class="sec-h"><h2>يوم بيوم</h2><span class="muted" style="font-size:12.5px">' + dates.length + ' يوم</span></div><div class="scroll"><table><tr><th>اليوم</th>' + names.map(function (n) { return '<th>' + esc(n) + '</th>'; }).join('') + '<th>المجموع</th></tr>' + rows + '</table></div>' +
-    '<p class="muted" style="font-size:12.5px;margin:10px 0 0">الأرقام صافي المبيعات من إقفال كل فرع. اليوم اللي إقفاله ناقص يطلع «—» وما يدخل في المجاميع، إلا آخر يوم يتكمّل من مبيعات أونكس ومكتوب جنبه «أونكس».</p></div>';
+    '<p class="muted" style="font-size:12.5px;margin:10px 0 0">الأرقام صافي المبيعات من إقفال كل فرع. اليوم اللي إقفاله ناقص يطلع «—» وما يدخل في المجاميع، إلا لو مبيعاته مسجلة في أونكس لنفس اليوم فتتكمّل منها ومكتوب جنبها «أونكس».</p></div>';
   $('view').innerHTML = ph('الفروع', 'من إقفالات الفروع اليومية') + hero + (L.note ? '<div class="hint">' + esc(L.note) + '</div>' : '') + '<div class="brg">' + cards + '</div>' + table;
 }
 function vBranches() {
