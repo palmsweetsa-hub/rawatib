@@ -2036,6 +2036,14 @@ function chSales_(m, tl, bf) {
   return {Y: Y, M: M, dvy: dvy, mDv: mDv, y: sum(Y), yOk: rep !== null || br !== null, yTxt: txt(Y) + (dvy === null && DVD.asOf ? ' · التوصيل لقطة لين ' + dayLabel(DVD.asOf) : ''), m: sum(M), mOk: mRep !== null || mBr !== null, mTxt: txt(M) + (mDv !== null && DVD.asOf ? ' (التوصيل لين ' + dayLabel(DVD.asOf) + ')' : '') + (mSal === null ? ' · سلة الشهر من صفحة سلة' : ''), mon: mon};
 }
 document.addEventListener('click', function (e) { var b = e.target && e.target.closest ? e.target.closest('[data-ofe]') : null; if (!b) return; var dt = $('ofd' + b.dataset.ofe); if (!dt) return; dt.hidden = !dt.hidden; b.setAttribute('aria-expanded', String(!dt.hidden)); if (!dt.hidden) b.after(dt); });
+// ملخص المواد الخام للداشبورد: القيمة ونسبة المكدس (تكفي أكثر من ٦٠ يوم، نفس رقم صفحة المصنع)، ومقارنتها بالأسبوع اللي قبله لو موجود
+function matSum_(ox) {
+  var M = ox && !ox.none ? (ox.mat || []) : []; if (!M.length || S.me.role !== 'owner') return null;
+  var pos = M.filter(function (x) { return x.v > 0; }), tot = pos.reduce(function (s, x) { return s + x.v; }, 0);
+  var ov = pos.filter(function (x) { return x.u1 > 0 && x.days > 60; }).reduce(function (s, x) { return s + x.v; }, 0);
+  var pct = tot ? Math.round(ov / tot * 100) : 0, pw = ox.matPrev && ox.matPrev.tot ? Math.round(ox.matPrev.over / ox.matPrev.tot * 100) : null;
+  return {tot: tot, over: ov, pct: pct, prevPct: pw, up: pw !== null && pct > pw};
+}
 // ===== المواد الخام · نظرة المالك (٢٧ نوفمبر): الفلوس الواقفة، والاستهلاك، والهدر، ومؤشرات التلاعب =====
 function oxMat_(d) {
   var M = (d.mat || []); if (!M.length || S.me.role !== 'owner') return '';
@@ -2335,6 +2343,15 @@ function oItems_(d) {
   if (own && S.tk && S.tk.unseen) S.tk.unseen.forEach(function (u) { it.push({key: 'ts:' + u.who + '|' + u.last, lv: 'r', ic: 'users', src: 'المهام', t: u.name + ' ما فتح مهامه ' + (u.last ? 'من ' + dayLabel(u.last) : 'أبد'), s: pl_(u.n, 'task') + ' مفتوحة عنده', btn: 'افتح المهام', fn: function () { go('tasks'); }}); });
   if (own && S.tk) { var lt = S.tk.tasks.filter(function (x) { return x.who === 'owner' && x.late && tkOpenSt_(x); });
     if (lt.length) it.push({key: 't:late|' + lt.length, lv: 'r', ic: 'check', src: 'المهام', t: (lt.length === 1 ? 'مهمة متأخرة عليك' : pl_(lt.length, 'task') + ' متأخرة عليك'), s: lt[0].title, btn: 'افتح المهام', fn: function () { go('tasks'); }}); }
+  if (own && C.onyx && !C.onyx.none) {   // المواد الخام (٢٧ نوفمبر): شراء أعلى من المعتاد، مواد تنصرف ورصيدها صفر، تعديل وصفات
+    var ox = C.onyx, od = ox.date || '';
+    var hp = (ox.buyPx || []).filter(function (x) { return x.chg !== null && x.chg !== undefined && x.chg >= 15 && !oxVat_(x); }).sort(function (a, b) { return b.chg - a.chg; });
+    if (hp.length) it.push({key: 'oxm:px|' + od + '|' + hp.length, lv: 'a', ic: 'card', src: 'المصنع', t: 'شراء بسعر أعلى من المعتاد · ' + pl_(hp.length, 'item'), s: hp.slice(0, 3).map(function (x) { return x.name + ' +' + Math.round(x.chg) + '%'; }).join('، '), btn: 'افتح المصنع', fn: function () { go('fac'); }});
+    var zc = (ox.cover || []).filter(function (x) { return x.use > 0 && x.q <= 0; });
+    if (zc.length) it.push({key: 'oxm:zero|' + od + '|' + zc.length, lv: 'a', ic: 'alert', src: 'المصنع', t: zc.length + ' مادة تنصرف ورصيدها صفر', s: 'شراء ما انسجل أو خلصت فعلاً: ' + zc.slice(0, 3).map(function (x) { return x.name; }).join('، '), btn: 'افتح المصنع', fn: function () { go('fac'); }});
+    var rc = (ox.audit || []).filter(function (a) { return /وصفة/.test(a.k); });
+    if (rc.length) it.push({key: 'oxm:rec|' + od + '|' + rc.length, lv: 'a', ic: 'doc', src: 'المصنع', t: 'انعدلت وصفة ' + (rc.length === 1 ? 'منتج' : rc.length + ' منتجات'), s: rc.slice(0, 2).map(function (a) { return a.doc + (a.user ? ' · ' + a.user : ''); }).join('، '), btn: 'افتح المصنع', fn: function () { go('fac'); }});
+  }
   var urg = function (x) { return x.lv !== 'r' ? 2 : (/اليوم|آخر مهلة|تنتهي اليوم/.test(x.dl !== undefined ? x.dl : x.t) ? 0 : 1); };
   return it.map(function (x, i) { x.i = i; x.u = urg(x); return x; }).sort(function (a, b) { return a.u - b.u || (Number(b.amt) || 0) - (Number(a.amt) || 0) || a.i - b.i; });
 }
@@ -2717,7 +2734,8 @@ function ccDraw_(d, m, cl, tl, crT, bf, ch, dp, dn7, ds7, cp, ov, op, lt, wt, pa
   if (can('delivery')) T.push({go: 'delivery', ic: 'bike', n: 'التوصيل', v: DVL.ok ? n2(Math.round(dp)) : '…', u: 'ر.س ربح 7 أيام', sub: DVL.ok ? 'وصلك ' + n2(Math.round(dn7)) + ' من مبيعات ' + n2(Math.round(ds7)) + ' · المواد ' + cp + '%' : '', s: dl.length ? st('r', dl.map(function (x) { return x.platform; }).join(' و') + ' فيه إقفال') : (dvStale && DVD.asOf ? st('n', 'البيانات واقفة على ' + dayLabel(DVD.asOf)) : (tro ? st('a', tro + ' تنتظر موافقتك') : st('g', 'المتاجر شغالة'))), f: DVD.asOf ? 'لقطة لين ' + dayLabel(DVD.asOf) : '', stale: dvStale});
   var fc = C.onyx && !C.onyx.none ? C.onyx.factory : null;
   var cv = ox0 ? (ox0.cover || []).filter(function (x) { return x.use > 0 && x.q > 0; }) : [], cv0 = cv[0], bpUp = ox0 ? (ox0.buyPx || []).filter(function (x) { return x.chg !== null && x.chg >= 5; }) : [];
-  if (can('fac')) T.push({go: 'fac', ic: 'doc', n: 'المصنع', v: fc ? n2(Math.round(fc.buyTotal)) : '—', u: fc ? 'ر.س مشتريات أمس' : '', sub: fc ? fc.items + ' صنف في المخزون' : 'المخزون والمشتريات من أونكس', s: cv0 && cv0.days <= 3 ? st('r', cv0.name + ' يكفي ' + (cv0.days < 1 ? 'أقل من يوم' : Math.round(cv0.days) + ' يوم')) : (bpUp.length ? st('a', 'ارتفع سعر ' + bpUp.length + ' صنف') : (!fc ? st('n', 'تبدأ الليلة') : (fc.zeroCount ? st('a', fc.zeroCount + ' صنف رصيده صفر') : st('g', 'المخزون سليم')))), f: fc ? 'أونكس ' + dayLabel(C.onyx.date) : '', stale: !fc});
+  var mz = matSum_(ox0), mzS = mz && mz.pct >= 50 ? (mz.up ? st('r', 'المكدس زاد إلى ' + mz.pct + '%') : st('a', 'المكدس ' + mz.pct + '% من المواد')) : null;
+  if (can('fac')) T.push({go: 'fac', ic: 'doc', n: 'المصنع', v: mz ? n2(Math.round(mz.tot)) : (fc ? n2(Math.round(fc.buyTotal)) : '—'), u: mz ? 'ر.س مواد خام · ' + mz.pct + '% مكدسة' : (fc ? 'ر.س مشتريات أمس' : ''), sub: fc ? (mz ? 'مشتريات أمس ' + n2(Math.round(fc.buyTotal)) + ' ر.س' : fc.items + ' صنف في المخزون') : 'المخزون والمشتريات من أونكس', s: (cv0 && cv0.days <= 3) ? st('r', cv0.name + ' يكفي ' + (cv0.days < 1 ? 'أقل من يوم' : Math.round(cv0.days) + ' يوم')) : (mzS || (bpUp.length ? st('a', 'ارتفع سعر ' + bpUp.length + ' صنف') : (!fc ? st('n', 'تبدأ الليلة') : (fc.zeroCount ? st('a', fc.zeroCount + ' صنف رصيده صفر') : st('g', 'المخزون سليم'))))), f: fc ? 'أونكس ' + dayLabel(C.onyx.date) : '', stale: !fc});
   var crS = crSum_();
   if (can('credit')) T.push({go: 'credit', ic: 'scale', n: 'الآجل', v: crS ? n2(Math.round(crT)) : '…', u: 'ر.س عند العملاء', sub: C.coll ? C.coll.custs.length + ' عميل آجل' : '', s: !C.coll ? st('n', '…') : (ov ? st('a', ov + ' فوق الحد') : st('g', 'كلهم ضمن الحد')), f: C.coll ? crSrc_(crS).replace(/^المصدر:\s*/, '') : ''});
   if (can('pay')) T.push({go: 'pay', ic: 'cal', n: 'الرواتب', v: n2(Math.round(k.total)), u: 'ر.س باقي للموظفين', sub: paidP + '% صُرف · مسير ' + k.monLabel + ' ' + (d.run ? d.run.state : 'مسودة'), s: k.pending ? st('a', k.pending + ' طلب ينتظر اعتمادك') : (d.run && d.run.state === 'مرفوع' ? st('a', 'المسير ينتظر اعتمادك') : st('g', 'ما فيه معلّق')), f: 'مباشر'});
