@@ -2042,14 +2042,16 @@ function vFac() {
     var d = C.onyx; if (S.tab !== tab) return; var f = d && !d.none ? d.factory : null;
     var ext = d && !d.none ? oxBuyCard_(d) + oxCoverCard_(d) : '';
     if (!f) { $('view').innerHTML = ph('المصنع', 'من نسخة أونكس الليلية') + (ext || '<div class="card">' + empty('doc', 'بيانات المصنع تبدأ من تشغيل الليلة', 'المخزون ومشتريات اليوم تنزل هنا تلقائياً من نسخة أونكس الليلية بعد الساعة ٢ الفجر.') + '</div>'); return; }
+    // نفدت = مواد رصيدها صفر وهي تنصرف في الإنتاج (من كفاية المخزون، لأن تقرير المخزون ما يجيب الأرصدة الصفرية) + الأصناف اللي رصيدها سالب
+    var nz = (d.cover || []).filter(function (x) { return x.use > 0 && x.q <= 0; }).length + (f.zeroCount || 0);
     var bento = '<div class="bento"><div class="bx gold"><small>مشتريات أمس</small><b>' + n2(f.buyTotal) + ' <span>ر.س · ' + f.buyCount + ' فاتورة</span></b></div>' +
       '<div class="bx"><small>أصناف المخزون</small><b>' + n2(f.items) + ' <span>صنف</span></b></div>' +
-      '<div class="bx"><small>رصيدها صفر أو سالب</small><b' + (f.zeroCount ? ' style="color:var(--r)"' : '') + '>' + f.zeroCount + ' <span>صنف</span></b></div>' +
+      '<div class="bx"><small>نفدت أو رصيدها بالسالب</small><b' + (nz ? ' style="color:var(--r)"' : '') + '>' + nz + ' <span>صنف' + (f.zeroCount ? ' · ' + f.zeroCount + ' بالسالب' : '') + '</span></b></div>' +
       '<div class="bx"><small>قربت تخلص (تحت الحد الأدنى)</small><b' + (f.lowCount ? ' style="color:var(--a)"' : '') + '>' + (f.withMin ? f.lowCount + ' <span>صنف</span>' : '— <span>الحد مو محدد</span>') + '</b></div></div>';
     var hint = f.withMin ? '' : '<div class="hint">الحد الأدنى للأصناف مو محدد في أونكس، فما أقدر أقول وش قرب يخلص. أول ما تحدده في بطاقة الصنف يطلع هنا تلقائياً.</div>';
     var list = function (t, L, cols) { return L.length ? '<div class="card"><div class="sec-h"><h2>' + t + '</h2><span class="muted" style="font-size:12.5px">' + L.length + '</span></div><div class="scroll"><table>' + cols + L.map(function (x) { return '<tr><td>' + esc(x.name || x.supplier) + '</td><td>' + (x.amount !== undefined ? n2(x.amount) : n2(x.qty) + ' ' + esc(x.unit || '')) + '</td><td>' + esc(x.min !== undefined ? n2(x.min) : (x.no || x.code || '')) + '</td></tr>'; }).join('') + '</table></div></div>' : ''; };
     $('view').innerHTML = ph('المصنع', 'المخزون ومشتريات ' + dayLabel(d.date, true) + ' · من أونكس') + oxNote_(d) + bento + ext + (f.withMin ? hint : '') +
-      list('مشتريات أمس', f.buys || [], '<tr><th>المورد</th><th>المبلغ</th><th>الفاتورة</th></tr>') + list('رصيدها صفر أو سالب', f.zero || [], '<tr><th>الصنف</th><th>الكمية</th><th>الرمز</th></tr>') + list('قربت تخلص', f.low || [], '<tr><th>الصنف</th><th>الكمية</th><th>الحد الأدنى</th></tr>') +
+      list('مشتريات أمس', f.buys || [], '<tr><th>المورد</th><th>المبلغ</th><th>الفاتورة</th></tr>') + list('رصيدها بالسالب', f.zero || [], '<tr><th>الصنف</th><th>الكمية</th><th>الرمز</th></tr>') + list('قربت تخلص', f.low || [], '<tr><th>الصنف</th><th>الكمية</th><th>الحد الأدنى</th></tr>') +
       '<p class="muted" style="font-size:12px">قراءة فقط من نسخة أونكس الليلية. المرجع النهائي لأي رقم هو أونكس نفسه.</p>';
   };
   if (C.onyx) draw(); else $('view').innerHTML = ph('المصنع') + '<div class="card">' + skel() + '</div>';
