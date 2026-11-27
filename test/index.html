@@ -2346,7 +2346,7 @@ function oItems_(d) {
   if (own && C.onyx && !C.onyx.none) {   // المواد الخام (٢٧ نوفمبر): شراء أعلى من المعتاد، مواد تنصرف ورصيدها صفر، تعديل وصفات
     var ox = C.onyx, od = ox.date || '';
     var hp = (ox.buyPx || []).filter(function (x) { return x.chg !== null && x.chg !== undefined && x.chg >= 15 && !oxVat_(x); }).sort(function (a, b) { return b.chg - a.chg; });
-    if (hp.length) it.push({key: 'oxm:px|' + od + '|' + hp.length, lv: 'a', ic: 'card', src: 'المصنع', t: 'شراء بسعر أعلى من المعتاد · ' + pl_(hp.length, 'item'), s: hp.slice(0, 3).map(function (x) { return x.name + ' +' + Math.round(x.chg) + '%'; }).join('، '), btn: 'افتح المصنع', fn: function () { go('fac'); }});
+    if (hp.length) it.push({key: 'oxm:px|' + od + '|' + hp.length, lv: 'a', ic: 'card', src: 'المصنع', t: 'شراء بسعر أعلى من المعتاد · ' + hp.length + ' صنف', s: hp.slice(0, 3).map(function (x) { return x.name + ' +' + Math.round(x.chg) + '%'; }).join('، '), btn: 'افتح المصنع', fn: function () { go('fac'); }});
     var zc = (ox.cover || []).filter(function (x) { return x.use > 0 && x.q <= 0; });
     if (zc.length) it.push({key: 'oxm:zero|' + od + '|' + zc.length, lv: 'a', ic: 'alert', src: 'المصنع', t: zc.length + ' مادة تنصرف ورصيدها صفر', s: 'شراء ما انسجل أو خلصت فعلاً: ' + zc.slice(0, 3).map(function (x) { return x.name; }).join('، '), btn: 'افتح المصنع', fn: function () { go('fac'); }});
     var rc = (ox.audit || []).filter(function (a) { return /وصفة/.test(a.k); });
