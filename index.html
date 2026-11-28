@@ -577,6 +577,15 @@ body[data-tab=tasks] .kpi:nth-child(4){background:#E7F5EC}body[data-tab=tasks] .
 .bxm{font-weight:800;font-size:14px;white-space:nowrap}.bxd{background:#EEF0F3;color:var(--mu);white-space:nowrap}.bxd.hot{background:var(--r2);color:var(--r)}
 .bxc .och{transition:transform .2s;color:var(--mu)}.bxc.op .och{transform:rotate(90deg)}.bxb{padding:0 16px 14px;border-top:1px solid var(--ln)}.bxb>p:first-child{margin-top:12px}
 .bxg{margin:16px 4px 8px;font-size:12.5px;font-weight:800;color:var(--gd3)}
+.bxg{display:flex;justify-content:space-between;align-items:center}.bxg span{font-weight:500;color:var(--mu);font-size:12px}.bxg[hidden]{display:none}
+.bxsub{display:flex;align-items:center;gap:8px;margin:-6px 0 12px;color:var(--mu);font-size:13px}.bxq{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--mu);background:none;color:var(--mu);font:700 12px/1 inherit;cursor:pointer;padding:0}
+.bxhint{font-size:12.5px;line-height:1.8;color:var(--mu);background:#fff;border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.bxtabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}.bxtabs::-webkit-scrollbar{display:none}.bxtabs button{flex:none;padding:7px 14px;border-radius:999px;background:#fff;border:1px solid var(--ln);font:inherit;font-size:13px;font-weight:700;color:var(--mu);cursor:pointer;white-space:nowrap}.bxtabs button.on{background:var(--n);border-color:var(--n);color:#fff}.bxtabs em{font-style:normal;opacity:.75;margin-right:5px}
+.bxs{padding:0!important;overflow:hidden;margin-bottom:8px}.bxsh{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:13px 14px;font:inherit;color:var(--ink);text-align:right;cursor:pointer}.bxsh:hover{background:#FBFAF7}.bxsh .bxt b{font-size:15px}.bxsh .bxt small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bxsi{flex:none;width:38px;height:38px;border-radius:12px;background:#F2F4F7;color:var(--n);display:grid;place-items:center}.bxn{flex:none;min-width:30px;height:26px;padding:0 8px;border-radius:999px;background:var(--n);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}.bxs.low .bxn{background:#EEF0F3;color:var(--mu)}.bxs.low:not(.op){opacity:.85}
+.bxs .och{transition:transform .2s;color:var(--mu)}.bxs.op>.bxsh .och{transform:rotate(90deg)}.bxsb{border-top:1px solid var(--ln);padding:10px 10px 2px}.bxsb .bxc{box-shadow:none;border:1px solid var(--ln)}
+.bxr{border-bottom:1px solid var(--ln);padding:10px 4px}.bxr label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}.bxr input{flex:none;width:20px;height:20px;margin:3px 0 0;accent-color:var(--n)}.bxr b{display:block;font-size:13.5px;line-height:1.7;font-weight:600}.bxr small{display:block;color:var(--mu);font-size:11.5px}.bxr details{margin:4px 30px 0 0;font-size:12px;color:var(--mu)}.bxr summary{cursor:pointer}.bxr details p{margin:4px 0 0;line-height:1.8}
+.bxf{display:flex;gap:8px;flex-wrap:wrap;padding:10px 4px 12px}.bxf .btn{width:auto;margin:0;min-height:42px;padding:0 16px;flex:1}
 .dk[hidden],.dnav[hidden]{display:none!important}
 @media(max-width:959px){.ccq-v small{display:block;margin:2px 0 0;font-size:11px}}.bxc{margin-bottom:8px}
 .cch-a .ohi{margin-inline-end:4px}
@@ -2244,6 +2253,41 @@ function bxItems_() {
   it.forEach(function (x, i) { x.i = i; x.due = x.dlISO || bxDue_(x.dl); x.days = x.due ? daysBetween_(td, x.due) : 99; x.u = x.days <= 2 ? 0 : (x.due ? 1 : 2); });
   return it.sort(function (a, b) { return a.u - b.u || a.days - b.days || (b.amt || 0) - (a.amt || 0) || a.i - b.i; });
 }
+function bxClean_(s) {   // عنوان مختصر بدون أرقام الطلبات والرموز الداخلية
+  s = String(s || '').replace(/\s*\((?:[^()]*?[ء-ي]{1,2}-[ء-ي]{0,2}-?[\d٠-٩][^()]*?)\)/g, '').replace(/ط-[^\s|`\/،؛]{1,6}-\d{8}-\d{2}/g, '').replace(/[،؛]?\s*النص الكامل في[^،؛]*/g, '').replace(/^\s*(سؤال|تأكيد)\s*:\s*/, '').replace(/[،,]?\s*\(?\s*(و?الغالب)[^)؛]*\)?/g, '');
+  s = s.split('؛')[0].replace(/\s{2,}/g, ' ').replace(/[\s،,]+$/, '').trim();
+  if (s.length > 80) { var c = s.indexOf('،', 30); if (c > 0 && c < 80) s = s.slice(0, c); }
+  return s;
+}
+var BX_CATS = [['pay', 'المدفوعات والمهل', 'card'], ['sec', 'الأمان والتأكيدات', 'lock'], ['rev', 'ردود التقييمات', 'bike'], ['mail', 'مسودات إيميل المصنع', 'inbox'], ['cust', 'ردود العملاء', 'users'], ['fac', 'المصنع والمخزون', 'store'], ['acc', 'أسئلة الحسابات', 'scale'], ['emp', 'الرواتب وطلبات الموظفين', 'receipt'], ['task', 'مهام تنتظر تأكيدك', 'check'], ['team', 'تنظيم الموظفين', 'office'], ['other', 'أسئلة ثانية', 'doc']];
+var BX_LOW = {team: 1};   // أقسام تنعرض باهتة وتنعتمد بعلامات اختيار
+function bxCat_(x) {
+  var t = bxDig_(x.t + ' ' + (x.t2 || '')), s = String(x.src || '');
+  if (x.kind === 'task') return 'task'; if (x.kind === 'open') return 'emp';
+  if (/الموارد البشرية/.test(s)) return 'team';
+  if (/بريد المصنع/.test(s)) return 'mail';
+  if (/تقييم/.test(t)) return 'rev';
+  if (/المبيعات وخدمة العملاء/.test(s) || /رد استلام/.test(t)) return 'cust';
+  if (/المنتجات والمخزون/.test(s)) return 'fac';
+  if (/أمني|صلاحيات|دخلت|توقيع|وقّع|Signit|Juro|مشاركات الملفات|مسجات|مهمة جديدة|احتيال/.test(t)) return 'sec';
+  if (/^التوصيل/.test(s) || /سدّد|سداد|ادفع|اعتراض|دومين|مطالبة|مخالفات|إيجار|التأمينات|مستحق/.test(t)) return 'pay';
+  if (/تدريب|السيرة|توظيف|تعريف|دليل|الموارد البشرية|واتساب/.test(t)) return 'team';
+  if (/مخزون|المواد|وصفة|تكلف|تكاليف|الوحدات|التركيب|المستودع|أصناف/.test(t)) return 'fac';
+  if (/رصيد|أرصدة|الحسابات|المحاسب|ميزان|مناديب|تحصيل|تحويلات|نينجا|ننجا|تمارا|مبلغ|الصافي|كاشير|إقفال|فاتورة|الضريبة|ائتماني|مردودات|ملخص/.test(t)) return 'acc';
+  return 'other';
+}
+function bxDups_(L) {   // طلبين على نفس الشي: يبقى الأحدث، والأقدم ينقفل معه
+  var by = {}; L.forEach(function (x) { if (x.ref) by[x.ref] = x; });
+  L.forEach(function (x) {
+    if (!x.ref) return; var raw = bxDig_(x.t + ' ' + (x.t2 || '') + ' ' + (x.why || ''));
+    if (!/يغني عن|مكرر/.test(raw)) return;
+    bxRefs_(raw).forEach(function (r) {
+      var y = by[r]; if (!y || y === x || y.dupOf || x.dupOf) return;
+      var nw = x.ref > y.ref ? x : y, od = nw === x ? y : x; od.dupOf = nw.key; (nw.dups = nw.dups || []).push(od);
+    });
+  });
+  return L.filter(function (x) { return !x.dupOf; });
+}
 function bxSplit_() {   // ينتظرك · وافقت وباقي التنفيذ · مؤجلة · انقفلت
   var B = C.box || {}, td = isoToday_(), o = {wait: [], todo: [], later: [], closed: []}, seen = {};
   bxItems_().forEach(function (x) {
@@ -2255,6 +2299,7 @@ function bxSplit_() {   // ينتظرك · وافقت وباقي التنفيذ 
     if (seen[k]) return; var dd = B[k], x = {key: k, ref: dd.ref, t: dd.title || dd.ref || k, src: dd.src || 'قرار سابق', dd: dd, kind: 'dec'};
     if (dd.dec === 'موافق' && !dd.done) o.todo.push(x); else if (dd.dec === 'مؤجل' && dd.until > td) o.later.push(x); else if (dd.day && daysBetween_(dd.day, td) <= 7) o.closed.push(x);
   });
+  o.wait = bxDups_(o.wait);
   return o;
 }
 function bxCount_() { return S.me && S.me.role === 'owner' && C.box ? bxSplit_().wait.length + (S.odN || 0) : null; }
@@ -2270,14 +2315,15 @@ function bxLoad_(cb) {
   return Promise.all(ps).then(function () { bxBadge_(); if (cb) cb(); });
 }
 function vBox() {
-  var tab = S.tab; S.bxv = S.bxv || 'wait';
+  var tab = S.tab; S.bxv = S.bxv || 'wait'; S.bxs = S.bxs || {}; S.bxk = S.bxk || {};
   var draw = function () {
     if (S.tab !== tab) return;
-    var o = bxSplit_(), L = o[S.bxv] || [];
-    var seg = '<div class="seg" role="tablist" style="margin-bottom:12px;flex-wrap:nowrap;gap:6px">' + [['wait', 'ينتظرك', o.wait.length + (S.odN || 0)], ['todo', 'وافقت وباقي التنفيذ', o.todo.length], ['later', 'مؤجلة', o.later.length], ['closed', 'انقفلت', o.closed.length]].map(function (s) { return '<button type="button" role="tab" aria-selected="' + (S.bxv === s[0]) + '" class="' + (S.bxv === s[0] ? 'on' : '') + '" style="min-width:0;padding:8px 4px;font-size:13.5px" data-bv="' + s[0] + '">' + s[1] + ' · ' + s[2] + '</button>'; }).join('') + '</div>';
+    var o = bxSplit_(), L = o[S.bxv] || [], wait = S.bxv === 'wait';
+    var seg = '<div class="bxtabs" role="tablist">' + [['wait', 'ينتظرك', o.wait.length + (S.odN || 0)], ['todo', 'وافقت', o.todo.length], ['later', 'مؤجلة', o.later.length], ['closed', 'انقفلت', o.closed.length]].map(function (s) { return '<button type="button" role="tab" aria-selected="' + (S.bxv === s[0]) + '" class="' + (S.bxv === s[0] ? 'on' : '') + '" data-bv="' + s[0] + '">' + s[1] + '<em>' + s[2] + '</em></button>'; }).join('') + '</div>';
     var card = function (x, i) {
-      var dd = x.dd, dueT = x.dl ? '<span class="st" style="' + (x.u === 0 ? 'background:var(--r2);color:var(--r)' : 'background:#EEF0F3;color:var(--mu)') + '">المهلة: ' + esc(x.dl) + '</span>' : '';
-      var det = (x.t2 && x.t2 !== x.t ? '<p style="margin:6px 0 0">' + esc(x.t2) + '</p>' : '') + (x.rec ? '<p style="margin:6px 0 0"><b style="color:var(--gd3)">التوصية: </b>' + esc(x.rec) + '</p>' : '') + (x.why ? '<p class="muted" style="margin:6px 0 0;font-size:12.5px;line-height:1.8">' + esc(x.why) + '</p>' : '') + (x.need ? '<p style="margin:6px 0 0;font-size:12.5px"><b>المطلوب قبلها: </b>' + esc(x.need) + '</p>' : '') +
+      var dd = x.dd, title = bxClean_(x.t) || x.t, full = x.t !== title ? x.t : '';
+      var det = (full ? '<p style="margin:6px 0 0">' + esc(full) + '</p>' : '') + (x.t2 && x.t2 !== x.t ? '<p style="margin:6px 0 0">' + esc(x.t2) + '</p>' : '') + (x.rec ? '<p style="margin:6px 0 0"><b style="color:var(--gd3)">التوصية: </b>' + esc(x.rec) + '</p>' : '') + (x.why ? '<p class="muted" style="margin:6px 0 0;font-size:12.5px;line-height:1.8">' + esc(x.why) + '</p>' : '') + (x.need ? '<p style="margin:6px 0 0;font-size:12.5px"><b>المطلوب قبلها: </b>' + esc(x.need) + '</p>' : '') +
+        (x.dups ? '<p class="muted" style="margin:6px 0 0;font-size:12.5px">فيه طلب مكرر على نفس الشي (' + x.dups.map(function (y) { return esc(y.ref); }).join('، ') + ')، وقرارك هنا يقفله معه.</p>' : '') +
         (x.txt ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:13px">النص الجاهز ▾</summary><pre style="white-space:pre-wrap;font:inherit;font-size:12.5px;background:var(--bg);border-radius:12px;padding:10px;margin:6px 0 0">' + esc(x.txt) + '</pre><button type="button" class="lnk" data-bcp="' + i + '">نسخ النص</button></details>' : '');
       var acts = '';
       if (S.bxv === 'wait') acts = x.kind === 'task' ? '<button class="btn" data-bk="ok" data-bi="' + i + '">أكّد إنها انقفلت</button><button class="btn l" data-bk="ret" data-bi="' + i + '">رجّعها</button>' :
@@ -2286,13 +2332,47 @@ function vBox() {
       else if (S.bxv === 'later') acts = dd && !dd.sent ? '<button class="btn l" data-bk="تراجع" data-bi="' + i + '">رجّعه لينتظرك</button>' : '';
       var st = dd ? '<small style="display:block;margin-top:6px;color:var(--gd3);font-weight:700">' + esc(dd.dec) + ' ' + dayLabel(dd.day) + (dd.until ? ' لين ' + dayLabel(dd.until) : '') + (dd.done ? ' · نُفذ ' + dayLabel(dd.done) : '') + (dd.note ? ' · ' + esc(dd.note) : '') + (dd.ref ? ' · ينسجل في سجل الموافقات' : (dd.sent ? ' · انرسل للمدير التنفيذي' : '')) + '</small>' : '';
       var op = !!(S.bxo || {})[x.key], dueL = x.due ? (x.days <= 0 ? (x.days < 0 ? 'فاتت' : 'اليوم') : (x.days === 1 ? 'بكرة' : dayLabel(x.due))) : '';
-      return '<div class="card bxc' + (x.u === 0 && S.bxv === 'wait' ? ' red' : '') + (op ? ' op' : '') + '"><button type="button" class="bxh" data-bo="' + i + '" aria-expanded="' + op + '"><span class="bxt"><b>' + esc(x.t) + '</b><small>' + esc(x.src) + (x.ref ? ' · ' + esc(x.ref) : '') + '</small></span>' + (x.amt ? '<span class="bxm">' + n2(x.amt) + '</span>' : '') + (dueL ? '<span class="st bxd' + (x.u === 0 ? ' hot' : '') + '">' + dueL + '</span>' : '') + '<span class="och">' + I('chev', 16) + '</span></button>' +
-        '<div class="bxb"' + (op ? '' : ' hidden') + '>' + (x.dl && !x.due ? '<p class="muted" style="margin:0;font-size:12.5px">المهلة كما كتبها المدير التنفيذي: ' + esc(x.dl) + '</p>' : '') + det + st + (acts ? '<div class="bxa">' + acts + '</div>' : '') + '</div></div>';
+      return '<div class="card bxc' + (x.u === 0 && wait ? ' red' : '') + (op ? ' op' : '') + '"><button type="button" class="bxh" data-bo="' + i + '" aria-expanded="' + op + '"><span class="bxt"><b>' + esc(title) + '</b><small>' + esc(String(x.src || '').replace(/^موظفين الذكاء · /, '')) + '</small></span>' + (x.amt ? '<span class="bxm">' + n2(x.amt) + '</span>' : '') + (dueL ? '<span class="st bxd' + (x.u === 0 ? ' hot' : '') + '">' + dueL + '</span>' : '') + '<span class="och">' + I('chev', 16) + '</span></button>' +
+        '<div class="bxb"' + (op ? '' : ' hidden') + '>' + (x.dl && !x.due ? '<p class="muted" style="margin:0;font-size:12.5px">المهلة كما كتبها المدير التنفيذي: ' + esc(x.dl) + '</p>' : '') + det + st + (acts ? '<div class="bxa">' + acts + '</div>' : '') + (x.ref ? '<small class="muted" style="display:block;margin-top:8px;font-size:11px">رقم الطلب ' + esc(x.ref) + '</small>' : '') + '</div></div>';
     };
-    var hint = {wait: 'موافقتك هنا ما تنفذ شي لحالها: اللي يحتاج إجراء برا (اعتراض، رد، دفع) ينتقل لـ«وافقت وباقي التنفيذ». واللي له رقم طلب ينسجل في سجل الموافقات خلال ١٠ دقايق، واللي بدون رقم يوصل للمدير التنفيذي.', todo: 'هذي وافقت عليها وباقي تنفيذها. لما تنفذ (أنت، أو كلود من كروم وأنت حاضر) اضغط «تم التنفيذ».', later: 'ترجع لـ«ينتظرك» لحالها في تاريخها.', closed: 'آخر ٧ أيام.'}[S.bxv];
-    $('view').innerHTML = ph('ينتظرك', 'كل اللي ينتظر قرارك في مكان واحد') + seg + '<p class="muted" style="font-size:12.5px;margin:0 0 10px;line-height:1.8">' + hint + '</p>' + (S.bxv === 'wait' ? '<div class="bxg" id="odg2" hidden></div><div class="card od" id="odec2" hidden></div>' + (L.length ? '<div class="bxg">قرارات وطلبات موافقة · ' + L.length + '</div>' : '') : '') + (L.length ? L.map(function (x, i) { var g = S.bxv === 'wait' && (!i || L[i - 1].u !== x.u) ? '<div class="bxg">' + ['مهلتها خلال يومين', 'لها موعد', 'بدون موعد محدد'][x.u] + ' · ' + L.filter(function (y) { return y.u === x.u; }).length + '</div>' : ''; return g + card(x, i); }).join('') : '<div class="card">' + empty('check', S.bxv === 'wait' ? 'ما فيه شي ينتظرك' : 'القائمة فاضية') + '</div>');
+    var row = function (x, i) {   // سطر بعلامة اختيار للأقسام الخفيفة
+      var on = S.bxk[x.key] !== false, title = bxClean_(x.t) || x.t, more = [x.t !== title ? x.t : '', x.rec ? 'التوصية: ' + x.rec : '', x.why].filter(Boolean).join(' — ');
+      return '<div class="bxr"><label><input type="checkbox" data-bck="' + i + '"' + (on ? ' checked' : '') + '><span><b>' + esc(title) + '</b><small>' + esc(String(x.src || '').replace(/^موظفين الذكاء · /, '')) + (x.ref ? ' · ' + esc(x.ref.slice(-11)) : '') + '</small></span></label>' + (more ? '<details><summary>التفاصيل</summary><p>' + esc(more) + '</p></details>' : '') + '</div>';
+    };
+    var hint = {wait: 'موافقتك هنا ما تنفذ شي لحالها: اللي يحتاج إجراء برا (اعتراض، رد، دفع) ينتقل لـ«وافقت». واللي له رقم طلب ينسجل في سجل الموافقات خلال ١٠ دقايق، واللي بدون رقم يوصل للمدير التنفيذي.', todo: 'هذي وافقت عليها وباقي تنفيذها. لما تنفذ (أنت، أو كلود من كروم وأنت حاضر) اضغط «تم التنفيذ».', later: 'ترجع لـ«ينتظرك» لحالها في تاريخها.', closed: 'آخر ٧ أيام.'}[S.bxv];
+    var body = '';
+    if (wait) {
+      var hot = L.filter(function (x) { return x.u === 0; }), rest = L.filter(function (x) { return x.u !== 0; }), g = {};
+      rest.forEach(function (x) { var c = bxCat_(x); (g[c] = g[c] || []).push(x); });
+      body = '<div class="bxg" id="bxtd">يحتاجك اليوم</div><div class="card od" id="odec2" hidden></div>' + hot.map(function (x) { return card(x, L.indexOf(x)); }).join('');
+      var cats = BX_CATS.filter(function (c) { return g[c[0]]; });
+      if (cats.length) body += '<div class="bxg">حسب النوع<span>اضغط القسم يفتح</span></div>';
+      body += cats.map(function (c) {
+        var its = g[c[0]], op = !!S.bxs[c[0]], low = BX_LOW[c[0]], pv = its.slice(0, 3).map(function (x) { return bxClean_(x.t); }).join(' · ');
+        var inner = '';
+        if (op) {
+          if (low) { var chk = its.filter(function (x) { return x.ref && x.kind === 'dec'; }), nOn = chk.filter(function (x) { return S.bxk[x.key] !== false; }).length; inner = chk.map(function (x) { return row(x, L.indexOf(x)); }).join('') + '<div class="bxf"><button class="btn" data-bbk="موافق" data-bc="' + c[0] + '"' + (nOn ? '' : ' disabled') + '>وافق على المحدد (' + nOn + ')</button><button class="btn l" data-bbk="مؤجل" data-bc="' + c[0] + '"' + (nOn ? '' : ' disabled') + '>أجّل المحدد أسبوع</button></div>' + its.filter(function (x) { return chk.indexOf(x) < 0; }).map(function (x) { return card(x, L.indexOf(x)); }).join(''); }
+          else inner = its.map(function (x) { return card(x, L.indexOf(x)); }).join('') + (its.length >= 3 && c[0] !== 'pay' && c[0] !== 'sec' ? '<div class="bxf"><button class="btn l" data-bbk="مؤجل" data-bc="' + c[0] + '" data-ball="1">أجّل القسم كله أسبوع</button></div>' : '');
+        }
+        return '<div class="card bxs' + (op ? ' op' : '') + (low ? ' low' : '') + '"><button type="button" class="bxsh" data-bs="' + c[0] + '" aria-expanded="' + op + '"><span class="bxsi">' + I(c[2], 19) + '</span><span class="bxt"><b>' + c[1] + '</b><small>' + esc(pv) + '</small></span><span class="bxn">' + its.length + '</span><span class="och">' + I('chev', 16) + '</span></button>' + (op ? '<div class="bxsb">' + inner + '</div>' : '') + '</div>';
+      }).join('');
+      if (!L.length) body += '<div class="card" id="bxemp">' + empty('check', 'ما فيه شي ينتظرك') + '</div>';
+    } else body = L.length ? L.map(function (x, i) { return card(x, i); }).join('') : '<div class="card">' + empty('check', 'القائمة فاضية') + '</div>';
+    var nHot = wait ? L.filter(function (x) { return x.u === 0; }).length : 0;
+    $('view').innerHTML = ph('ينتظرك', '') + '<div class="bxsub"><span id="bxsum">' + (wait ? pl_(L.length + (S.odN || 0), 'item') : '') + '</span><button type="button" class="bxq" id="bxq" aria-label="وش معنى القرار هنا؟">؟</button></div><p class="bxhint" id="bxhint"' + (S.bxhint ? '' : ' hidden') + '>' + hint + '</p>' + seg + body;
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bv]'), function (b) { b.onclick = function () { S.bxv = b.dataset.bv; draw(); }; });
-    if (S.bxv === 'wait') odBox_();
+    $('bxq').onclick = function () { S.bxhint = !S.bxhint; $('bxhint').hidden = !S.bxhint; };
+    if (wait) {
+      odBox_();
+      var td = $('bxtd'); if (td) td.hidden = !nHot && !S.odN; var sm = $('bxsum'); if (sm) sm.textContent = pl_(L.length + (S.odN || 0), 'item') + (nHot + (S.odN || 0) ? ' · منها ' + (nHot + (S.odN || 0)) + ' لازم خلال يومين' : '');
+      var em = $('bxemp'); if (em && S.odN) em.hidden = true;
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-bs]'), function (b) { b.onclick = function () { S.bxs[b.dataset.bs] = !S.bxs[b.dataset.bs]; draw(); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-bck]'), function (b) { b.onchange = function () { S.bxk[L[b.dataset.bck].key] = b.checked; draw(); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('#view [data-bbk]'), function (b) { b.onclick = function () {
+      var c = b.dataset.bc, its = L.filter(function (x) { return x.u !== 0 && bxCat_(x) === c && x.kind === 'dec' && (b.dataset.ball || (x.ref && S.bxk[x.key] !== false)); });
+      bxBulk_(its, b.dataset.bbk, b, draw);
+    }; });
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bo]'), function (b) { b.onclick = function () { var x = L[b.dataset.bo], c = b.parentNode, bd = c.querySelector('.bxb'), o = bd.hidden; S.bxo = S.bxo || {}; S.bxo[x.key] = o; bd.hidden = !o; c.classList.toggle('op', o); b.setAttribute('aria-expanded', String(o)); }; });
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bcp]'), function (b) { b.onclick = function () { var x = L[b.dataset.bcp]; try { navigator.clipboard.writeText(x.txt); toast('انسخ النص'); } catch (e) { toast('ما قدرت أنسخ'); } }; });
     Array.prototype.forEach.call(document.querySelectorAll('#view [data-bk]'), function (b) { b.onclick = function () { bxAct_(L[b.dataset.bi], b.dataset.bk, b, draw); }; });
@@ -2300,12 +2380,20 @@ function vBox() {
   if (C.box) draw(); else $('view').innerHTML = ph('ينتظرك') + '<div class="card">' + skel() + '</div>';
   bxLoad_(draw).catch(function (e) { if (!C.box) fail(e); else toast('ما قدرت أحدّث — ' + e.message); }); oLoad_();
 }
+function bxBulk_(its, dec, btn, redraw) {   // قرار واحد لعدة بنود، واحد ورا الثاني عشان سجل القرارات ما يتلخبط
+  if (!its.length) return; var until = dec === 'مؤجل' ? tkAdd_(isoToday_(), 7) : '', n = 0;
+  if (!confirm((dec === 'موافق' ? 'توافق على ' : 'تأجّل أسبوع ') + pl_(its.length, 'item') + '؟')) return;
+  busy(btn, true);
+  its.concat(its.reduce(function (a, x) { return a.concat(x.dups || []); }, [])).reduce(function (p, x) {
+    return p.then(function () { return call('boxDecide', S.t, x.key, {dec: dec, ref: x.ref || '', title: x.t, src: x.src, note: x.dupOf ? 'مكرر — انقفل مع الطلب الأحدث' : 'قرار جماعي', until: until}).then(function (m) { C.box = m; n++; }); });
+  }, Promise.resolve()).then(function () { toast(dec === 'موافق' ? 'انسجلت الموافقة على ' + pl_(n, 'item') : 'تأجّل ' + pl_(n, 'item')); bxBadge_(); redraw(); }, function (e) { busy(btn, false); toast((n ? 'انسجل ' + n + ' وبعدها: ' : '') + e.message); bxBadge_(); redraw(); });
+}
 function bxAct_(x, k, btn, redraw) {
   if (k === 'go') { go(x.go); return; }
   if (k === 'ok' || k === 'ret') { busy(btn, true); call('taskDecide', S.t, x.id, k === 'ok', '').then(function () { toast(k === 'ok' ? 'انقفلت المهمة' : 'رجعت له'); return tkLoad_(); }).then(redraw, function (e) { busy(btn, false); toast(e.message); }); return; }
   var save = function (d, b2, md) {
     busy(b2, true);
-    call('boxDecide', S.t, x.key, Object.assign({dec: k, ref: x.ref || '', title: x.t, src: x.src}, d || {})).then(function (m) { C.box = m; if (md) md.remove(); toast({'موافق': 'انسجلت الموافقة', 'مرفوض': 'انسجل الرفض', 'مؤجل': 'تأجّل', 'نُفذ': 'انسجل التنفيذ', 'تراجع': 'رجع لينتظرك'}[k]); bxBadge_(); redraw(); })
+    call('boxDecide', S.t, x.key, Object.assign({dec: k, ref: x.ref || '', title: x.t, src: x.src}, d || {})).then(function (m) { C.box = m; return (k === 'نُفذ' || k === 'تراجع' ? [] : x.dups || []).reduce(function (p, y) { return p.then(function () { return call('boxDecide', S.t, y.key, {dec: k, ref: y.ref || '', title: y.t, src: y.src, note: 'مكرر — انقفل مع ' + (x.ref || 'الطلب الأحدث'), until: (d || {}).until || ''}).then(function (m2) { C.box = m2; }); }); }, Promise.resolve()); }).then(function () { var m = C.box; if (md) md.remove(); toast({'موافق': 'انسجلت الموافقة', 'مرفوض': 'انسجل الرفض', 'مؤجل': 'تأجّل', 'نُفذ': 'انسجل التنفيذ', 'تراجع': 'رجع لينتظرك'}[k]); bxBadge_(); redraw(); })
       .catch(function (e) { busy(b2, false); if (md && md.querySelector('#bxm')) msg('bxm', e.message); else toast(e.message); });
   };
   if (k === 'نُفذ' || k === 'تراجع') { save({}, btn); return; }
